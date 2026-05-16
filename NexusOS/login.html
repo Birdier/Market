@@ -1,37 +1,49 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Nexus | Auth</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Administrator Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-black text-white font-sans min-h-screen flex items-center justify-center overflow-hidden">
+    
+    <!-- Functional Back Button -->
+    <a href="index.html" class="absolute top-8 left-8 flex items-center text-zinc-400 hover:text-white transition-colors text-sm font-medium z-20 group">
+        <div class="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex justify-center items-center mr-3 group-hover:bg-white/10 group-hover:-translate-x-1 transition-all"><i class="fa-solid fa-arrow-left"></i></div>
+        Return to Storefront
+    </a>
+
     <!-- Visual Backglow -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div class="w-[500px] h-[300px] bg-blue-600/20 blur-[100px] rounded-full"></div>
+        <div class="w-[500px] h-[300px] bg-blue-600/10 blur-[120px] rounded-full"></div>
     </div>
 
     <!-- Login Modal -->
-    <div class="relative glass-panel rounded-2xl p-8 w-full max-w-[360px] animate-fade z-10 border border-white/10">
-        <div id="error-toast" class="hidden mb-4 p-3 bg-red-900/40 border border-red-500/50 text-red-400 font-mono text-[10px] uppercase font-bold tracking-widest rounded text-center">Invalid Hash Token</div>
+    <div class="relative glass-panel rounded-2xl p-10 w-full max-w-sm animate-fade z-10 border border-white/10 shadow-2xl">
+        <div id="error-toast" class="hidden mb-6 p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs font-medium rounded-lg text-center">Incorrect email or password.</div>
         
-        <i class="fa-solid fa-server text-3xl text-blue-500 mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"></i>
-        <h2 class="text-xl font-bold tracking-tight">Admin Initialization</h2>
-        <p class="text-[10px] text-zinc-500 uppercase font-mono tracking-widest mt-1 mb-8">E-commerce Protocol V2</p>
+        <div class="flex items-center mb-6">
+            <div class="w-8 h-8 rounded-md bg-blue-600 flex justify-center items-center mr-3 shadow-lg shadow-blue-500/20"><i class="fa-solid fa-cube text-white text-sm"></i></div>
+            <h2 class="text-xl font-bold tracking-tight text-white">Nexus Workspace</h2>
+        </div>
+        
+        <p class="text-sm text-zinc-400 mb-8 font-light">Sign in to manage your inventory, process orders, and review analytics.</p>
 
         <form id="auth-form" class="space-y-4">
             <div>
-                <input id="in-email" type="email" placeholder="admin@nexus.io" class="w-full bg-[#050505] border border-white/10 px-4 py-3 rounded-lg text-sm text-white font-mono focus:border-blue-500 outline-none transition" required>
+                <label class="block text-xs font-medium text-zinc-300 mb-1.5">Email address</label>
+                <input id="in-email" type="email" placeholder="admin@nexus.io" class="w-full bg-black/50 border border-white/10 px-4 py-2.5 rounded-lg text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none transition" required>
             </div>
             <div>
-                <input id="in-key" type="password" placeholder="admin" class="w-full bg-[#050505] border border-white/10 px-4 py-3 rounded-lg text-sm text-white font-mono focus:border-blue-500 outline-none transition" required>
+                <label class="block text-xs font-medium text-zinc-300 mb-1.5 flex justify-between"><span>Password</span> <a href="#" class="text-blue-500 hover:text-blue-400">Forgot?</a></label>
+                <input id="in-key" type="password" placeholder="••••••••" class="w-full bg-black/50 border border-white/10 px-4 py-2.5 rounded-lg text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none transition" required>
             </div>
-            <button type="submit" id="submit-btn" class="w-full bg-white text-black hover:bg-zinc-300 transition-colors uppercase tracking-[0.2em] font-mono font-bold text-[11px] py-3 rounded-lg mt-2">
-                Connect Routing
+            <button type="submit" id="submit-btn" class="w-full bg-white text-black hover:bg-zinc-200 transition-colors font-medium text-sm py-2.5 rounded-lg mt-6 shadow-[0_0_15px_rgba(255,255,255,0.1)] flex justify-center items-center">
+                Sign In
             </button>
         </form>
     </div>
@@ -43,12 +55,13 @@
             const btn = document.getElementById('submit-btn');
             
             if (document.getElementById('in-email').value === 'admin@nexus.io' && document.getElementById('in-key').value === 'admin') {
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Unlocking Database';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Authenticating...';
+                btn.classList.add('opacity-80', 'cursor-not-allowed');
                 localStorage.setItem('auth_session', 'admin_access');
-                setTimeout(() => window.location.href = 'admin.html', 800);
+                setTimeout(() => window.location.href = 'admin.html', 600);
             } else {
                 document.getElementById('error-toast').classList.remove('hidden');
-                setTimeout(() => document.getElementById('error-toast').classList.add('hidden'), 2000);
+                setTimeout(() => document.getElementById('error-toast').classList.add('hidden'), 2500);
             }
         });
     </script>
