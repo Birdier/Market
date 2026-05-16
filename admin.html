@@ -4,869 +4,372 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        // Restrict Access
+        // Kick out unauthorized users
         if (localStorage.getItem('auth_session') !== 'admin') {
              window.location.replace('login.html');
         }
     </script>
-    <title>NEXUS | Admin Control System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>NEXUS | Admin Dashboard</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter'], mono: ['JetBrains Mono'] }, colors: { app: { bg: '#000000', surface: '#050505', box: '#0a0a0d', border: 'rgba(255,255,255,0.06)' } } } } }
     </script>
+    
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 4px; background: transparent; } 
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .hidden-pane { display: none !important; }
     </style>
 </head>
-<body class="bg-app-bg text-zinc-300 font-sans h-screen flex overflow-hidden">
+<body class="bg-app-bg text-zinc-300 font-sans h-screen flex overflow-hidden selection:bg-blue-600/30">
 
-    <!-- GLOBAL NAV SIDEBAR -->
+    <!-- SIDEBAR NAVIGATION -->
     <aside class="w-[280px] border-r border-app-border bg-[#030303] flex flex-col shrink-0 shadow-2xl relative z-20">
-        <div class="h-16 flex items-center px-6 border-b border-app-border bg-black shrink-0">
-            <div class="w-2 h-2 rounded-full bg-blue-500 mr-3 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
-            <h1 class="text-white font-bold font-mono text-[11px] uppercase tracking-widest">Nexus Root Env</h1>
+        <div class="h-16 flex items-center px-6 border-b border-app-border bg-black">
+            <i class="fa-solid fa-layer-group text-blue-500 mr-3"></i>
+            <h1 class="text-white font-bold tracking-widest font-mono text-[11px] uppercase">Nexus Admin</h1>
         </div>
 
-        <nav class="flex-1 py-6 px-4 space-y-2 relative">
-            <button onclick="switchTab('dash')" id="tab-dash" class="nav-button w-full flex items-center text-left text-white bg-white/10 rounded p-3 text-[11px] font-mono font-bold uppercase transition tracking-wider border border-white/5 shadow-sm">
-                <i class="fa-solid fa-chart-line mr-3 text-blue-500"></i> <span class="flex-1">Live Engine</span>
+        <nav class="flex-1 py-6 px-4 space-y-2">
+            <button onclick="openTab('dash')" id="btn-dash" class="w-full flex items-center bg-white/10 text-white border border-white/5 rounded p-3 text-[11px] font-mono font-bold uppercase transition tracking-wider nav-btn">
+                <i class="fa-solid fa-chart-pie mr-3 text-blue-400 nav-icon"></i> Dashboard
             </button>
-            <button onclick="switchTab('inventory')" id="tab-inventory" class="nav-button w-full flex items-center text-left text-zinc-500 hover:text-white hover:bg-white/5 rounded p-3 text-[11px] font-mono font-bold uppercase transition tracking-wider border border-transparent">
-                <i class="fa-solid fa-box mr-3"></i> <span class="flex-1">Hardware Editor</span>
+            <button onclick="openTab('inventory')" id="btn-inventory" class="w-full flex items-center text-zinc-500 hover:text-white hover:bg-white/5 border border-transparent rounded p-3 text-[11px] font-mono font-bold uppercase transition tracking-wider nav-btn">
+                <i class="fa-solid fa-box mr-3 nav-icon"></i> Inventory Editor
             </button>
-            <button onclick="switchTab('mail')" id="tab-mail" class="nav-button w-full flex items-center text-left text-zinc-500 hover:text-white hover:bg-white/5 rounded p-3 text-[11px] font-mono font-bold uppercase transition tracking-wider border border-transparent">
-                <i class="fa-solid fa-server mr-3"></i> <span class="flex-1">System Array Matrix</span>
+            <button onclick="openTab('mail')" id="btn-mail" class="w-full flex items-center text-zinc-500 hover:text-white hover:bg-white/5 border border-transparent rounded p-3 text-[11px] font-mono font-bold uppercase transition tracking-wider nav-btn">
+                <i class="fa-solid fa-envelope mr-3 nav-icon"></i> System Mail
             </button>
         </nav>
 
-        <div class="p-4 border-t border-app-border bg-black/50 shrink-0">
-            <a href="index.html" target="_blank" class="w-full flex items-center justify-center p-2 mb-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 transition border border-app-border rounded text-[10px] uppercase font-bold tracking-widest font-mono"><i class="fa-solid fa-external-link mr-2"></i> Visit Live App</a>
-            <button onclick="executeLogout()" class="w-full py-2 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white text-[10px] border border-red-500/20 font-bold uppercase tracking-widest rounded transition"><i class="fa-solid fa-power-off mr-2"></i> Terminate Server</button>
+        <div class="p-4 border-t border-app-border bg-black/40">
+            <button onclick="logoutAdmin()" class="w-full py-2 text-red-500 hover:text-white bg-red-900/10 hover:bg-red-600 border border-red-500/20 text-[10px] font-bold uppercase rounded transition">
+                <i class="fa-solid fa-power-off mr-2"></i> End Session
+            </button>
         </div>
     </aside>
 
-    <!-- MAIN DATA DISPLAY PANELS -->
-    <main class="flex-1 bg-app-surface h-full flex flex-col relative bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 to-app-bg z-0 overflow-hidden">
+    <!-- MAIN VIEW AREA -->
+    <main class="flex-1 flex flex-col bg-app-surface bg-[radial-gradient(ellipse_at_top,_rgba(37,99,235,0.05),_#000)] z-0 h-full overflow-hidden">
         
-        <!-- PANE: FINANCIAL DASHBOARD -->
-        <section id="pane-dash" class="tab-pane flex-1 max-w-7xl mx-auto w-full p-8 space-y-6 overflow-y-auto custom-scrollbar block">
-            <header class="flex justify-between items-end border-b border-app-border pb-6 shrink-0">
+        <!-- PANE 1: DASHBOARD -->
+        <section id="pane-dash" class="flex-1 w-full max-w-7xl mx-auto p-8 overflow-y-auto custom-scrollbar pane block">
+            <header class="flex justify-between items-end border-b border-app-border pb-6 mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-white tracking-tight">Financial Aggregation State</h2>
-                    <p class="font-mono text-[10px] text-zinc-500 tracking-[0.2em] mt-1 uppercase">Listening for live incoming Storefront Events</p>
-                </div>
-                <div class="px-3 py-1 bg-black border border-white/10 shadow-inner rounded flex items-center text-[10px] text-zinc-400 font-mono tracking-widest uppercase">
-                    <span class="w-1.5 h-1.5 bg-green-500 rounded mr-2"></span> Master Data Synced
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Ledger Matrix</h2>
+                    <p class="font-mono text-[10px] uppercase text-zinc-500 mt-2 tracking-widest">Listening for active E-Commerce transactions.</p>
                 </div>
             </header>
 
-            <!-- Metrics KPIs -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
-                <div class="p-5 border border-app-border rounded-xl bg-app-box shadow-xl relative overflow-hidden">
-                     <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold font-mono mb-2">Net Accumulation / Lifetime</p>
-                     <p id="kpi-rev" class="text-3xl text-white font-bold">$0.00</p>
-                     <div class="absolute right-0 bottom-0 w-24 h-2 h-[2px] bg-blue-600"></div>
-                </div>
-                <div class="p-5 border border-app-border rounded-xl bg-app-box shadow-xl relative">
-                     <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold font-mono mb-2">Node Handshakes / Settled Carts</p>
-                     <p id="kpi-orders" class="text-3xl text-white font-bold">0 Active</p>
-                </div>
-                <div class="p-5 border border-app-border rounded-xl bg-app-box shadow-xl relative">
-                     <p class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold font-mono mb-2">Network Listed Hardware Products</p>
-                     <p id="kpi-prods" class="text-3xl text-white font-bold">0 Instances</p>
-                </div>
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                 <div class="border border-app-border rounded-xl p-5 bg-app-box shadow-lg">
+                     <p class="text-[9px] uppercase font-mono tracking-widest text-zinc-500 mb-2">Total Accumulated Revenue</p>
+                     <p id="ui-rev" class="text-3xl font-bold text-white">$0.00</p>
+                 </div>
+                 <div class="border border-app-border rounded-xl p-5 bg-app-box shadow-lg">
+                     <p class="text-[9px] uppercase font-mono tracking-widest text-zinc-500 mb-2">Processed Invoices / Orders</p>
+                     <p id="ui-orders" class="text-3xl font-bold text-white">0 Orders</p>
+                 </div>
+                 <div class="border border-app-border rounded-xl p-5 bg-app-box shadow-lg">
+                     <p class="text-[9px] uppercase font-mono tracking-widest text-zinc-500 mb-2">Active Hardware Products</p>
+                     <p id="ui-prods" class="text-3xl font-bold text-white">0 Items Live</p>
+                 </div>
             </div>
 
-            <!-- Visualization / Table Grids -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[350px]">
-                <!-- Graph Render Space -->
-                <div class="border border-app-border bg-[#030303] rounded-xl flex flex-col p-5 shadow-2xl relative">
-                    <h3 class="text-white text-[11px] font-mono font-bold tracking-widest uppercase mb-1 z-10"><i class="fa-solid fa-chart-line mr-2 text-zinc-600"></i> Cash Map Visualizer</h3>
-                    <div class="relative w-full flex-1 z-10 min-h-[250px]"><canvas id="dashCanvas"></canvas></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[400px]">
+                <div class="bg-app-box border border-app-border rounded-xl p-5 flex flex-col">
+                    <h3 class="text-xs font-mono font-bold uppercase text-white mb-2 pb-2 border-b border-app-border">Revenue Visualizer</h3>
+                    <div class="relative flex-1"><canvas id="revenueChart"></canvas></div>
                 </div>
-
-                <!-- Feed Output list -->
-                <div class="border border-app-border bg-[#0a0a0d] rounded-xl flex flex-col shadow-2xl overflow-hidden h-[350px]">
-                    <div class="bg-black border-b border-app-border p-4 text-[10px] text-white font-mono tracking-widest font-bold uppercase shrink-0"><i class="fa-solid fa-bolt mr-2 text-blue-500"></i> Pipeline Array: Valid Receipts</div>
-                    <div id="render-recent-orders" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
-                        <!-- Feed Array injected dynamically -->
+                
+                <div class="bg-black border border-app-border rounded-xl flex flex-col h-[400px]">
+                    <div class="p-4 bg-app-box border-b border-app-border">
+                        <h3 class="text-xs text-white uppercase tracking-widest font-mono font-bold">Secure Settlement Pipeline</h3>
+                    </div>
+                    <div id="ui-orders-list" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3">
+                         <!-- Orders rendered here -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- PANE: STOCK & INVENTORY -->
-        <section id="pane-inventory" class="tab-pane hidden flex-1 max-w-7xl mx-auto w-full p-8 h-full flex flex-col overflow-y-auto custom-scrollbar">
-            <header class="flex justify-between items-end border-b border-app-border pb-6 shrink-0 mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-white tracking-tight">Inventory Object Generator</h2>
-                    <p class="font-mono text-[10px] text-zinc-500 tracking-[0.2em] mt-1 uppercase">Any pushes map immediately onto E-Commerce domain</p>
-                </div>
-            </header>
+        <!-- PANE 2: INVENTORY MANAGER -->
+        <section id="pane-inventory" class="flex-1 w-full max-w-7xl mx-auto p-8 overflow-y-auto custom-scrollbar pane hidden-pane">
+            <h2 class="text-2xl font-bold text-white border-b border-app-border pb-6 mb-6">Inventory Object Configurator</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10 flex-1 min-h-[400px]">
-                 <!-- Gen Block Form -->
-                 <div class="bg-[#030303] border border-app-border rounded-xl p-6 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between">
-                     <form onsubmit="execCreateProduct(event)" class="space-y-4 font-mono text-[10px] tracking-wider uppercase font-bold relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+                 <!-- Add Product Form -->
+                 <div class="bg-app-box rounded-xl border border-app-border p-6 shadow-2xl relative h-fit">
+                     <form onsubmit="addProduct(event)" class="space-y-4">
                           <div>
-                              <label class="block text-zinc-400 mb-2">Display Item Nomenclature</label>
-                              <input id="modName" class="w-full bg-[#111] border border-white/5 rounded-md px-3 py-2 text-white font-sans font-light tracking-normal outline-none focus:border-blue-500 transition shadow-inner" type="text" placeholder="Advanced Tensor Rack A1..." required>
+                              <label class="block text-zinc-500 font-bold uppercase text-[9px] font-mono tracking-widest mb-1">Public Model Name</label>
+                              <input id="input-name" class="w-full bg-[#111] border border-app-border text-white px-3 py-2 rounded focus:border-blue-500 outline-none" required placeholder="Server Hardware V4">
                           </div>
                           <div>
-                              <label class="block text-zinc-400 mb-2">Object Architecture Details Text</label>
-                              <textarea id="modDesc" class="w-full bg-[#111] border border-white/5 rounded-md px-3 py-2 text-zinc-300 font-sans font-light tracking-normal outline-none focus:border-blue-500 transition shadow-inner resize-none h-20" placeholder="Specifications for array processing speed modules..." required></textarea>
+                              <label class="block text-zinc-500 font-bold uppercase text-[9px] font-mono tracking-widest mb-1">Architecture Description</label>
+                              <textarea id="input-desc" class="w-full bg-[#111] border border-app-border text-zinc-300 px-3 py-2 rounded focus:border-blue-500 outline-none h-20 resize-none" required placeholder="Specifications..."></textarea>
                           </div>
                           <div class="grid grid-cols-2 gap-4">
-                               <div>
-                                   <label class="block text-zinc-400 mb-2">Price Stream Calculation ($)</label>
-                                   <input id="modPrice" class="w-full bg-[#111] border border-white/5 rounded-md px-3 py-2 text-white font-sans font-bold outline-none focus:border-green-500 transition" type="number" min="0" step="0.01" value="500" required>
-                               </div>
-                               <div>
-                                   <label class="block text-zinc-400 mb-2">FontAwesome Render Image Hook</label>
-                                   <select id="modIcon" class="w-full bg-[#111] border border-white/5 rounded-md px-3 py-2 text-zinc-400 font-sans tracking-tight outline-none h-[34px] appearance-none shadow">
-                                       <option value="fa-microchip">Nvidia / Processor Board (Silicon)</option>
-                                       <option value="fa-server">Data Tower Unit (Rack)</option>
-                                       <option value="fa-vr-cardboard">Peripheral Device Unit</option>
-                                       <option value="fa-memory">Solid State Drive / Access Map</option>
-                                   </select>
-                               </div>
+                              <div>
+                                 <label class="block text-zinc-500 font-bold uppercase text-[9px] font-mono tracking-widest mb-1">Target Price ($)</label>
+                                 <input id="input-price" type="number" step="0.01" class="w-full bg-[#111] border border-app-border text-white px-3 py-2 rounded focus:border-green-500 outline-none" required value="400">
+                              </div>
+                              <div>
+                                  <label class="block text-zinc-500 font-bold uppercase text-[9px] font-mono tracking-widest mb-1">Item UI Icon</label>
+                                  <select id="input-icon" class="w-full bg-[#111] border border-app-border text-zinc-300 px-3 py-2 rounded outline-none appearance-none h-[38px]">
+                                      <option value="fa-microchip">Microchip</option>
+                                      <option value="fa-server">Server Rack</option>
+                                      <option value="fa-gamepad">Peripherals</option>
+                                      <option value="fa-wifi">Networking Route</option>
+                                  </select>
+                              </div>
                           </div>
-                          <button type="submit" class="w-full bg-white hover:bg-blue-600 hover:border-blue-500 text-black hover:text-white uppercase font-bold py-3 text-[10px] tracking-[0.2em] transition-all rounded shadow active:scale-95 mt-4 flex items-center justify-center">
-                              <i class="fa-solid fa-code-commit mr-2 text-[11px]"></i> Publish Database Mapping Event
+                          <button type="submit" class="w-full bg-white hover:bg-blue-600 text-black hover:text-white uppercase font-bold text-[10px] tracking-widest py-3 rounded mt-4 transition">
+                              Deploy Live Database Build
                           </button>
                      </form>
                  </div>
-
-                 <!-- Render Live Store Data Check UI List Block -->
-                 <div class="border border-app-border rounded-xl overflow-hidden bg-black flex flex-col shadow-lg max-h-[600px]">
-                      <div class="p-3 text-[10px] text-white uppercase font-mono font-bold tracking-widest bg-[#0a0a0d] border-b border-app-border">Confirmed Cloud Assets Deployed</div>
-                      <div id="render-live-prods" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 bg-app-box shadow-inner"></div>
+                 
+                 <!-- Product Listing -->
+                 <div class="bg-black border border-app-border rounded-xl flex flex-col h-[500px]">
+                      <div class="p-4 bg-app-box border-b border-app-border"><h4 class="text-[10px] uppercase font-bold font-mono tracking-widest">Active Front-End Market Nodes</h4></div>
+                      <div id="ui-prods-list" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2"></div>
                  </div>
             </div>
         </section>
 
-        <!-- PANE: COMMS/WEBMAIL ARRAY -->
-        <section id="pane-mail" class="tab-pane hidden flex-1 h-full relative font-mono overflow-hidden">
-             <div class="grid grid-cols-1 md:grid-cols-3 h-full w-full">
-                  
-                  <div class="col-span-1 border-r border-app-border bg-[#030303] h-full flex flex-col shadow-[15px_0_30px_rgba(0,0,0,0.8)] z-20">
-                      <div class="bg-[#050505] text-[10px] font-bold text-white uppercase tracking-widest p-4 border-b border-app-border flex justify-between shrink-0">System Ping Comms </div>
-                      <div id="mail-feed-view" class="flex-1 overflow-y-auto custom-scrollbar bg-black/60 relative">
-                            <!-- Array mapped comms injected here by javascript renderer func -->
-                      </div>
-                  </div>
-
-                  <div class="col-span-1 md:col-span-2 h-full flex items-center justify-center bg-app-surface bg-[radial-gradient(#15151b_1px,transparent_0)] bg-[length:15px_15px] p-6 text-sm shrink" id="mail-reader-view">
-                       <p class="font-mono text-xs font-bold text-zinc-700 tracking-[0.4em] uppercase text-center block max-w-sm border-2 border-dashed border-zinc-900 py-10 rounded opacity-60 bg-[#000]">Route Target Email Object Selected In Interface Panel Memory Loop UI Element.</p>
-                  </div>
-             </div>
+        <!-- PANE 3: EMAIL MATRIX -->
+        <section id="pane-mail" class="pane hidden-pane h-full w-full">
+            <div class="grid grid-cols-1 md:grid-cols-3 h-full">
+                 <!-- List Side -->
+                 <div class="col-span-1 border-r border-app-border bg-black h-full flex flex-col z-10">
+                     <div class="bg-[#030303] text-[10px] font-bold text-white uppercase tracking-widest p-5 border-b border-app-border">Comms Inbox</div>
+                     <div id="ui-email-list" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2"></div>
+                 </div>
+                 <!-- Reading Side -->
+                 <div class="col-span-1 md:col-span-2 h-full bg-[#07070a] flex items-center justify-center p-8 overflow-y-auto custom-scrollbar" id="ui-email-read">
+                     <p class="font-mono text-xs uppercase text-zinc-700 tracking-widest border border-dashed border-zinc-800 p-8 rounded">Awaiting Thread Selection</p>
+                 </div>
+            </div>
         </section>
 
     </main>
 
-    <!-- ROBUST CLIENT-SIDE SERVER DRIVER  -->
+    <!-- JAVASCRIPT SYSTEM ENGINE -->
     <script>
         
-        // ------------------------- DB SELF HEAL AND SYNC LAYER ----------------------------
-        function SAFE_DB_HOOK() {
-             let systemRaw = localStorage.getItem('NEXUS_DB');
-             let secureObj;
+        // --- DB MANAGEMENT & SELF HEALING ---
+        function getSafeDB() {
+             let dbRaw = localStorage.getItem('NEXUS_DB');
+             let dbObj = {};
+             if(dbRaw) { try { dbObj = JSON.parse(dbRaw); } catch(e) {} }
 
-             if (!systemRaw) {
-                 secureObj = { users:[], emails:[], orders:[], revenue: 0, products:[] };
-             } else {
-                 try { secureObj = JSON.parse(systemRaw); } catch(e) { secureObj = { revenue:0 }; }
+             if(!dbObj.revenue) dbObj.revenue = 0;
+             if(!dbObj.orders || !Array.isArray(dbObj.orders)) dbObj.orders = [];
+             if(!dbObj.products || !Array.isArray(dbObj.products)) dbObj.products = [];
+             if(!dbObj.emails || !Array.isArray(dbObj.emails)) {
+                 dbObj.emails = [ { id: 'evt_1', sender: 'Root Framework', subj: 'System Initialized', body: 'Database constructed. UI routing safely attached.', date: 'LIVE' } ];
              }
+             return dbObj;
+        }
 
-             // Repair Object if missing arrays caused by older code fragments 
-             if (!secureObj.revenue) secureObj.revenue = 0;
-             if (!secureObj.products || !Array.isArray(secureObj.products)) secureObj.products = [];
-             if (!secureObj.orders || !Array.isArray(secureObj.orders)) {
-                 // Try mapping older code data if user used 'recentOrders' 
-                 if (secureObj.recentOrders && Array.isArray(secureObj.recentOrders)) secureObj.orders = secureObj.recentOrders;
-                 else secureObj.orders = [];
-             }
-             if (!secureObj.emails || !Array.isArray(secureObj.emails)) secureObj.emails = [
-                 { id:'m_core', date: 'LIVE', sender: 'Root Routing System', subject:'Welcome To Interface Array Layer System Structure Node Array String Map Database DB Core Structure ', body: 'Matrix successfully rendered logic maps safely! Data arrays are functional.' }
-             ];
+        function saveSafeDB(obj) { localStorage.setItem('NEXUS_DB', JSON.stringify(obj)); }
 
-             // Return hardened data obj 
-             return secureObj;
-         }
-
-         function COMMIT_DB_SYNC(valStructureDataArchitectureHtmlMapObjectLayout) {
-             localStorage.setItem('NEXUS_DB', JSON.stringify(valStructureDataArchitectureHtmlMapObjectLayout));
-         }
-
-         // Formatting System Component Variables Setup API Map
-         const formatNumDolListAPIHtmlVariablesMarkupUIStringLogicComponentsLayoutUI = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
-         let memSavedLiveChartObjectStructureListMarkupHTMLSyntaxArchitectureHtmlVariablesUI;
+        // Format money easily
+        const fmtUsd = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
+        let dashboardChartObject = null;
 
 
-        // ------------------------- RENDER & PANE LOGIC LAYER ----------------------------
+        // --- TAB NAVIGATION CONTROLLER ---
+        function openTab(tabName) {
+             // Hide all Panes
+             document.querySelectorAll('.pane').forEach(el => el.classList.add('hidden-pane'));
+             document.getElementById('pane-' + tabName).classList.remove('hidden-pane');
 
-         function switchTab(focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup){
-             // Disengage all classes CSS mapping components Setup
-             document.querySelectorAll('.tab-pane').forEach(z => z.classList.add('hidden'));
-             document.querySelectorAll('.tab-pane').forEach(z => z.classList.remove('block'));
-             document.querySelectorAll('.nav-button').forEach(bt => {
-                 bt.classList.replace('text-white','text-zinc-500'); bt.classList.replace('bg-white/10','bg-transparent'); bt.classList.replace('border-white/5','border-transparent');
-                 let tI = bt.querySelector('i'); if(tI) tI.classList.remove('text-blue-500');
+             // Fix Button Stylings
+             document.querySelectorAll('.nav-btn').forEach(btn => {
+                 btn.classList.replace('bg-white/10','bg-transparent');
+                 btn.classList.replace('text-white','text-zinc-500');
+                 btn.classList.replace('border-white/5','border-transparent');
              });
+             document.querySelectorAll('.nav-icon').forEach(ico => ico.classList.remove('text-blue-400'));
 
-             // Apply Focus string mapping CSS String Array String setup Object css HTML Variables list syntax framework layout Map UI Variables architecture Array CSS loop markup String List String Array structure Object elements HTML components Object Map UI html elements
-             let focusPaneElementBlockMarkup= document.getElementById('pane-' + focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup);
-             focusPaneElementBlockMarkup.classList.remove('hidden'); focusPaneElementBlockMarkup.classList.add('block');
-             if(focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup === 'mail') focusPaneElementBlockMarkup.classList.add('flex'); // mail specifically utilizes flex container grids array mapping HTML components API layout API HTML html Map API framework Array Map HTML components string array markup components html setup List map Object array API array mapping HTML HTML framework framework Map Object architecture css list mapping html Array UI html css List markup Map Array
+             // Highlight Active Button
+             let targetBtn = document.getElementById('btn-' + tabName);
+             targetBtn.classList.remove('bg-transparent','text-zinc-500','border-transparent');
+             targetBtn.classList.add('bg-white/10','text-white','border-white/5');
+             targetBtn.querySelector('.nav-icon').classList.add('text-blue-400');
 
-             let tagBtnRenderTriggerStateFrameworkListMappingArchitectureArraycssListMaphtmlMarkupStringUI= document.getElementById('tab-' + focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup);
-             tagBtnRenderTriggerStateFrameworkListMappingArchitectureArraycssListMaphtmlMarkupStringUI.classList.remove('text-zinc-500','bg-transparent','border-transparent'); 
-             tagBtnRenderTriggerStateFrameworkListMappingArchitectureArraycssListMaphtmlMarkupStringUI.classList.add('text-white','bg-white/10','border-white/5');
+             // Trigger Specific Loading Logic
+             if (tabName === 'dash') renderDashboard();
+             if (tabName === 'inventory') renderProductsList();
+             if (tabName === 'mail') renderEmailsList();
+        }
+
+        // --- DASHBOARD PANE LOGIC ---
+        function renderDashboard() {
+             const DB = getSafeDB();
              
-             let focusI = tagBtnRenderTriggerStateFrameworkListMappingArchitectureArraycssListMaphtmlMarkupStringUI.querySelector('i'); if(focusI) focusI.classList.add('text-blue-500');
+             document.getElementById('ui-rev').innerText = fmtUsd.format(DB.revenue);
+             document.getElementById('ui-orders').innerText = DB.orders.length + " Orders";
+             document.getElementById('ui-prods').innerText = DB.products.length + " Items Live";
 
-             if(focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup === 'dash') executeDashRefreshCycleSyntaxLogicArrayVariablesArchitectureCSS();
-             if(focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup === 'inventory') renderProductsUIManageElementsCssLayoutComponentsSyntaxMapMarkup();
-             if(focusPannelHtmlArrayMapCSSMarkupComponentLayoutStringLogicHTMLStringStringSetupHTMLVariablesStructureLayoutSyntaxArchitectureSetup === 'mail') triggerMatrixListStringUIMarkupStructureCssLayoutHTMLHtmlLoopArrayMap();
-         }
-
-         function executeLogout() { localStorage.removeItem('auth_session'); window.location.replace('login.html'); }
-
-
-         // ------------------------- DASH REFRESH LOGIC LAYER  ----------------------------
-
-         function executeDashRefreshCycleSyntaxLogicArrayVariablesArchitectureCSS(){
-             let LiveDbMemoryMappingListStringVariablesHtmlLogicHTMLComponentsUIObjecthtmlSetupList= SAFE_DB_HOOK();
-
-             document.getElementById('kpi-rev').innerText= formatNumDolListAPIHtmlVariablesMarkupUIStringLogicComponentsLayoutUI.format(LiveDbMemoryMappingListStringVariablesHtmlLogicHTMLComponentsUIObjecthtmlSetupList.revenue || 0);
-             document.getElementById('kpi-orders').innerText= LiveDbMemoryMappingListStringVariablesHtmlLogicHTMLComponentsUIObjecthtmlSetupList.orders.length;
-             document.getElementById('kpi-prods').innerText= LiveDbMemoryMappingListStringVariablesHtmlLogicHTMLComponentsUIObjecthtmlSetupList.products.length;
-             
-             let OutputHTMLlistElementsMarkupCSSHTMLVariablesUIArrayStructureFrameworkcomponentsHtmlArrayArrayElementsMapComponentsObjectStringFrameworkListUIArrayAPI = document.getElementById('render-recent-orders');
-             
-             if(LiveDbMemoryMappingListStringVariablesHtmlLogicHTMLComponentsUIObjecthtmlSetupList.orders.length > 0){
-                  OutputHTMLlistElementsMarkupCSSHTMLVariablesUIArrayStructureFrameworkcomponentsHtmlArrayArrayElementsMapComponentsObjectStringFrameworkListUIArrayAPI.innerHTML = LiveDbMemoryMappingListStringVariablesHtmlLogicHTMLComponentsUIObjecthtmlSetupList.orders.slice(0, 8).map(el=>`
-                      <div class="border border-white/5 p-3 rounded bg-black flex justify-between font-mono text-[9px] uppercase relative group">
-                            <div class="w-1 absolute left-0 top-0 bottom-0 bg-zinc-700 group-hover:bg-green-500 transition-colors hidden group-hover:block transition rounded-l"></div>
-                            <div class="max-w-[70%] group-hover:pl-2 transition-all"> <b class="bg-app-box px-1 rounded shadow-sm text-zinc-300 font-bold tracking-tight inline-block mb-[3px] border border-zinc-900 border-white/5 ">ID:${el.id}</b> <p class="text-zinc-600 line-clamp-1 w-full ml-1 mb-1 mt-[2px] " >  ${el.desc} </p>  <span class="text-zinc-500 tracking-wider"> USR: ${el.uEmail}</span> </div>
-                            <span class="text-green-500 font-bold block pt-1 ml-[5%]"> <i class="fa-solid fa-plus font-light text-xs text-white opacity-40 ml-[-5%] mr-[5px] align-baseline pb-[2px] block"></i>   ${formatNumDolListAPIHtmlVariablesMarkupUIStringLogicComponentsLayoutUI.format(el.amt)} </span>
-                      </div>
-                  `).join('');
+             // Render recent transactions 
+             let ordListHTML = '';
+             if (DB.orders.length > 0) {
+                 DB.orders.slice(0,10).forEach(order => {
+                     ordListHTML += `
+                         <div class="p-3 bg-[#0a0a0d] border border-white/5 rounded-lg flex flex-col font-mono uppercase relative group">
+                              <div class="absolute w-1 left-0 top-0 bottom-0 bg-green-500 opacity-0 group-hover:opacity-100 transition rounded-l-lg"></div>
+                              <div class="flex justify-between items-start mb-1 group-hover:pl-2 transition-all">
+                                   <b class="text-white text-[10px] bg-black px-1 rounded shadow">#${order.id}</b>
+                                   <span class="text-green-500 font-bold text-[11px]">${fmtUsd.format(order.amt)}</span>
+                              </div>
+                              <p class="text-[9px] text-zinc-500 tracking-wider mb-1 truncate group-hover:pl-2 transition-all">${order.desc}</p>
+                              <span class="text-[8px] text-zinc-600 tracking-widest font-sans font-bold group-hover:pl-2 transition-all">FROM: ${order.uEmail}</span>
+                         </div>
+                     `;
+                 });
              } else {
-                 OutputHTMLlistElementsMarkupCSSHTMLVariablesUIArrayStructureFrameworkcomponentsHtmlArrayArrayElementsMapComponentsObjectStringFrameworkListUIArrayAPI.innerHTML = `<p class="p-8 text-center uppercase tracking-widest text-zinc-600 font-mono font-bold text-xs opacity-60 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] "> Transaction database nodes return clean map CSS setup . <br> Connect store string syntax logic to HTML object syntax wrapper syntax structure framework layout Object architecture HTML syntax List Array map map setup </p> `;
+                 ordListHTML = '<div class="text-center font-mono font-bold text-[10px] text-zinc-600 mt-10 uppercase">Waiting on cart settlements.</div>';
              }
+             document.getElementById('ui-orders-list').innerHTML = ordListHTML;
 
-             reChartEngineDrawDOMValuesMapFrameworkHTMLUIarrayComponentsFrameworkHtmlVariablesHTMLObjectFrameworkVariablesCSShtmlLogicElementsSetupElementsArchitectureHtmlAPI();
-         }
-         
-         function reChartEngineDrawDOMValuesMapFrameworkHTMLUIarrayComponentsFrameworkHtmlVariablesHTMLObjectFrameworkVariablesCSShtmlLogicElementsSetupElementsArchitectureHtmlAPI(){
-             let CtxObjectDOMChartHookVarStringCssElementsObjectUIObjectLayoutSetupHtmlMapFrameworkSyntaxMarkupVariablesCss= document.getElementById('dashCanvas').getContext('2d');
-             let DbValFloatCalcArrayMarkupHTMLObjectLogicMapUIHTMLMapListStringListLogicStringHtmlStringListArrayCSS = SAFE_DB_HOOK();
+             // Refresh Chart logic
+             drawChart(DB.revenue);
+        }
 
-             if (memSavedLiveChartObjectStructureListMarkupHTMLSyntaxArchitectureHtmlVariablesUI) memSavedLiveChartObjectStructureListMarkupHTMLSyntaxArchitectureHtmlVariablesUI.destroy(); // Safely reset
+        function drawChart(revTotal) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (dashboardChartObject) dashboardChartObject.destroy();
+            
+            // Generate some dummy previous datapoints that logically climb to your live total
+            let baseline = revTotal > 0 ? (revTotal * 0.4) : 1000;
+            
+            let gradient = ctx.createLinearGradient(0,0,0,300);
+            gradient.addColorStop(0, 'rgba(59,130,246, 0.5)'); 
+            gradient.addColorStop(1, 'rgba(0,0,0, 0)');
 
-             let basMapSyntaxHTMLArrayArchitectureStringMarkupCSSCSSVariablesMarkupObject= DbValFloatCalcArrayMarkupHTMLObjectLogicMapUIHTMLMapListStringListLogicStringHtmlStringListArrayCSS.revenue > 0 ? (DbValFloatCalcArrayMarkupHTMLObjectLogicMapUIHTMLMapListStringListLogicStringHtmlStringListArrayCSS.revenue/2) : 2400;
+            dashboardChartObject = new Chart(ctx, {
+                type: 'line', 
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Yesterday', 'LIVE SYSTEM MATH'],
+                    datasets: [{ 
+                         data: [ baseline*0.8, baseline, baseline*1.5, revTotal*0.8, revTotal ], 
+                         backgroundColor: gradient, fill: true, borderColor: '#3b82f6', tension: 0.2, pointBackgroundColor: '#fff', borderWidth: 2
+                    }]
+                },
+                options: { maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{display:false, beginAtZero:true},x:{ticks:{color:'rgba(255,255,255,0.4)', font:{family:'monospace',size:10}},grid:{display:false}}} }
+            });
+        }
 
-             let grVarSyntaxHTMLhtmlFrameworkAPIHtmlArray= CtxObjectDOMChartHookVarStringCssElementsObjectUIObjectLayoutSetupHtmlMapFrameworkSyntaxMarkupVariablesCss.createLinearGradient(0,0,0,400);
-             grVarSyntaxHTMLhtmlFrameworkAPIHtmlArray.addColorStop(0,'rgba(37,99,235, 0.4)'); grVarSyntaxHTMLhtmlFrameworkAPIHtmlArray.addColorStop(1,'transparent');
+        // --- INVENTORY PANE LOGIC ---
+        function addProduct(event) {
+             event.preventDefault();
+             let DB = getSafeDB();
+             
+             let nName = document.getElementById('input-name').value;
+             let nDesc = document.getElementById('input-desc').value;
+             let nPrice = parseFloat(document.getElementById('input-price').value);
+             let nIcon = document.getElementById('input-icon').value;
 
-             memSavedLiveChartObjectStructureListMarkupHTMLSyntaxArchitectureHtmlVariablesUI= new Chart(CtxObjectDOMChartHookVarStringCssElementsObjectUIObjectLayoutSetupHtmlMapFrameworkSyntaxMarkupVariablesCss, {
-                  type: 'line', data: {
-                       labels: ['EventA','EventB','EventC','T-Minus', 'Live DB Map framework css Object Map String syntax String map css API '], 
-                       datasets: [{ data: [basMapSyntaxHTMLArrayArchitectureStringMarkupCSSCSSVariablesMarkupObject*0.8, basMapSyntaxHTMLArrayArchitectureStringMarkupCSSCSSVariablesMarkupObject, basMapSyntaxHTMLArrayArchitectureStringMarkupCSSCSSVariablesMarkupObject*1.3, basMapSyntaxHTMLArrayArchitectureStringMarkupCSSCSSVariablesMarkupObject*0.6, DbValFloatCalcArrayMarkupHTMLObjectLogicMapUIHTMLMapListStringListLogicStringHtmlStringListArrayCSS.revenue], backgroundColor: grVarSyntaxHTMLhtmlFrameworkAPIHtmlArray, fill:true, borderColor:'#3b82f6', tension:0.2, pointBackgroundColor:'#fff', borderWidth: 2}]
-                  },
-                  options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{display:false, beginAtZero:true},x:{ticks:{color:'rgba(255,255,255,0.4)', font:{family:'monospace',size:9}},grid:{color:'transparent', display:false}}} }
+             DB.products.push({ id: 'PRD_' + Math.floor(Math.random()*9999), name: nName, desc: nDesc, price: nPrice, icon: nIcon });
+             
+             saveSafeDB(DB);
+
+             // Clean form and re-render
+             document.getElementById('input-name').value = '';
+             document.getElementById('input-desc').value = '';
+             document.getElementById('input-price').value = '400';
+             renderProductsList();
+        }
+
+        function removeProduct(targetId) {
+             let DB = getSafeDB();
+             DB.products = DB.products.filter(item => item.id !== targetId);
+             saveSafeDB(DB);
+             renderProductsList();
+        }
+
+        function renderProductsList() {
+             const DB = getSafeDB();
+             let uiHTML = '';
+
+             DB.products.slice().reverse().forEach(prod => {
+                  uiHTML += `
+                     <div class="bg-[#111] border border-white/5 rounded-lg p-3 flex justify-between items-center group relative overflow-hidden transition-all">
+                         <div class="flex items-center gap-4">
+                             <div class="bg-black border border-white/10 w-10 h-10 rounded flex items-center justify-center text-white/50 group-hover:text-blue-500 transition shadow">
+                                 <i class="fa-solid ${prod.icon}"></i>
+                             </div>
+                             <div>
+                                 <h4 class="text-white font-bold text-[11px] font-mono tracking-widest uppercase leading-tight">${prod.name}</h4>
+                                 <div class="flex items-center gap-2 mt-1">
+                                     <span class="bg-blue-900/30 text-blue-400 font-bold text-[9px] px-1 font-mono">${prod.id}</span>
+                                     <span class="text-zinc-400 font-bold font-sans text-xs">${fmtUsd.format(prod.price)}</span>
+                                 </div>
+                             </div>
+                         </div>
+                         <button onclick="removeProduct('${prod.id}')" class="opacity-0 group-hover:opacity-100 hover:text-red-400 text-zinc-500 text-lg transition absolute right-4"><i class="fa-solid fa-trash-can"></i></button>
+                     </div>
+                  `;
              });
-         }
-
-         
-         // ------------------------- ADD HARDWARE GENERATOR Array Variables CSS Logic CSS CSS framework ----------------------------
-         function execCreateProduct(eStateHTMLstringEventComponentVariablesStructureUIArchitectureSetupCSSListArrayComponentsLogicCSS){
-              eStateHTMLstringEventComponentVariablesStructureUIArchitectureSetupCSSListArrayComponentsLogicCSS.preventDefault();
-              let curSysDBCmdVariablesArchitectureComponentsListMappingStringSyntaxAPIStringSetupStringAPIhtmlVariablesMappingStringMarkupMap= SAFE_DB_HOOK();
-
-              curSysDBCmdVariablesArchitectureComponentsListMappingStringSyntaxAPIStringSetupStringAPIhtmlVariablesMappingStringMarkupMap.products.push({
-                   id: 'PRD_' + Math.floor(Math.random()*9000), name: document.getElementById('modName').value.trim(), desc: document.getElementById('modDesc').value.trim(), price: parseFloat(document.getElementById('modPrice').value), icon: document.getElementById('modIcon').value 
-              });
-
-              COMMIT_DB_SYNC(curSysDBCmdVariablesArchitectureComponentsListMappingStringSyntaxAPIStringSetupStringAPIhtmlVariablesMappingStringMarkupMap);
-              
-              document.getElementById('modName').value=''; document.getElementById('modDesc').value=''; document.getElementById('modPrice').value='500';
-              renderProductsUIManageElementsCssLayoutComponentsSyntaxMapMarkup(); 
-              
-              // Flash alert confirmation
-              let saveBtnStringArchitectureHTMLComponentsFrameworkComponentsStructureAPIHTMLFrameworkhtmlObjecthtmlMappingMarkupCSSCSSListAPIHtmlMappingStringUIlayout = eStateHTMLstringEventComponentVariablesStructureUIArchitectureSetupCSSListArrayComponentsLogicCSS.target.querySelector('button');
-              saveBtnStringArchitectureHTMLComponentsFrameworkComponentsStructureAPIHTMLFrameworkhtmlObjecthtmlMappingMarkupCSSCSSListAPIHtmlMappingStringUIlayout.innerHTML = '<i class="fa-solid fa-check text-[14px]"></i> Data Node Pipeline Linked To API map Array String html structure markup syntax UI css Html array Object setup elements css API'; 
-              saveBtnStringArchitectureHTMLComponentsFrameworkComponentsStructureAPIHTMLFrameworkhtmlObjecthtmlMappingMarkupCSSCSSListAPIHtmlMappingStringUIlayout.classList.add('bg-blue-600', 'text-white', 'border-transparent');
-              setTimeout(()=> { saveBtnStringArchitectureHTMLComponentsFrameworkComponentsStructureAPIHTMLFrameworkhtmlObjecthtmlMappingMarkupCSSCSSListAPIHtmlMappingStringUIlayout.innerHTML = '<i class="fa-solid fa-code-commit mr-2 text-[11px]"></i> Publish Database Mapping Event string String Object architecture '; saveBtnStringArchitectureHTMLComponentsFrameworkComponentsStructureAPIHTMLFrameworkhtmlObjecthtmlMappingMarkupCSSCSSListAPIHtmlMappingStringUIlayout.classList.remove('bg-blue-600', 'text-white','border-transparent'); }, 2000);
-         }
-
-         function rDBDeleteStringMarkupFrameworkAPIlayoutSyntax(numArrStrXhtmlComponentsLogicHTMLlayoutMapUIArchitectureArraycssArchitectureArrayUIArchitectureArrayMapMapMappingMapHtmlhtmlMapAPIcomponentsObjectCSSSyntaxCSSstringHTMLMappingArrayHTML){
-             let systemSyncElementsStructureMapLogicCSSFrameworkCSSVariablesListHTMLVariablesCSS = SAFE_DB_HOOK();
-             systemSyncElementsStructureMapLogicCSSFrameworkCSSVariablesListHTMLVariablesCSS.products.splice(numArrStrXhtmlComponentsLogicHTMLlayoutMapUIArchitectureArraycssArchitectureArrayUIArchitectureArrayMapMapMappingMapHtmlhtmlMapAPIcomponentsObjectCSSSyntaxCSSstringHTMLMappingArrayHTML, 1);
-             COMMIT_DB_SYNC(systemSyncElementsStructureMapLogicCSSFrameworkCSSVariablesListHTMLVariablesCSS);
-             renderProductsUIManageElementsCssLayoutComponentsSyntaxMapMarkup();
-         }
-
-         function renderProductsUIManageElementsCssLayoutComponentsSyntaxMapMarkup(){
-              let DOMStoreBlockUIStringMarkupComponentsHtmlVariablesListSyntaxArchitectureFrameworkStructureLayoutArrayArrayArchitectureMarkupMappingMapLogicUI = document.getElementById('render-live-prods');
-              let MDBElementsObjectVariablesArchitectureLayoutElementsCSSStringStructureListUIHtmlComponentsMapCssArrayElementsHTMLsetupSyntaxVariablesMarkupHTMLMappingHtmlComponentsMappinghtmlMapListcssHtmlFrameworkUIarray = SAFE_DB_HOOK().products;
-
-              DOMStoreBlockUIStringMarkupComponentsHtmlVariablesListSyntaxArchitectureFrameworkStructureLayoutArrayArrayArchitectureMarkupMappingMapLogicUI.innerHTML = MDBElementsObjectVariablesArchitectureLayoutElementsCSSStringStructureListUIHtmlComponentsMapCssArrayElementsHTMLsetupSyntaxVariablesMarkupHTMLMappingHtmlComponentsMappinghtmlMapListcssHtmlFrameworkUIarray.slice().reverse().map((itmsStructArchitectureVariablesVariablesComponentsHTMLAPIObjectVariablesObjectHTMLHtmlCSShtmlUIlogichtmlhtmlListCssVariablescomponentsHTMLListMarkupcssarrayHtmlsetupcsscssMapArraylayoutAPIListUIAPIlayoutcomponentsstringMaplogicMapUIlayoutObjectObjectVariablesstructurecomponentsCSSvariableselementsframeworkVariablescssStringMarkupcssObject, ddxHtmlObjectMarkupComponentsCssObjectHtmlCSSMarkupStructurelayoutStringstringvariablesSyntaxcomponentsListMappingVariablesStringcsshtmlcssAPIAPIUIcomponents) => `
-                    <div class="flex items-center gap-4 bg-app-box p-3 border border-app-border rounded-lg shadow uppercase font-mono font-bold tracking-tight text-[11px] group relative transition object syntax Map Array architecture elements layout css Array CSS variables Html markup mapping Object list ">
-                          <i class="fa-solid ${itmsStructArchitectureVariablesVariablesComponentsHTMLAPIObjectVariablesObjectHTMLHtmlCSShtmlUIlogichtmlhtmlListCssVariablescomponentsHTMLListMarkupcssarrayHtmlsetupcsscssMapArraylayoutAPIListUIAPIlayoutcomponentsstringMaplogicMapUIlayoutObjectObjectVariablesstructurecomponentsCSSvariableselementsframeworkVariablescssStringMarkupcssObject.icon || 'fa-box'} w-10 h-10 flex items-center justify-center bg-black border border-white/5 rounded drop-shadow shadow text-white/50 group-hover:text-blue-500 transition-colors ml-0 mt-[1px]"></i> 
-                          <div class="flex-1"><h4 class="text-zinc-200 uppercase line-clamp-1 break-words pb-1 border-b border-app-border ">${itmsStructArchitectureVariablesVariablesComponentsHTMLAPIObjectVariablesObjectHTMLHtmlCSShtmlUIlogichtmlhtmlListCssVariablescomponentsHTMLListMarkupcssarrayHtmlsetupcsscssMapArraylayoutAPIListUIAPIlayoutcomponentsstringMaplogicMapUIlayoutObjectObjectVariablesstructurecomponentsCSSvariableselementsframeworkVariablescssStringMarkupcssObject.name}</h4><h4 class="text-zinc-500  leading-loose font-bold uppercase " ><i class="font-light pr-3 block border-none py-1 mr-[30%] line-clamp-1 break-normal truncate align bg-[radial-gradient(circle_at_left,_var(--tw-gradient-stops))] pt-[0] truncate  "><b class="lowercase tracking-[0.03rem] text-[10px] pb-1 "> ID Tag </b> <b class="bg-[white] align float pl-[5px] mx-[6px] object text-white text-[1px] object break align "></b> <span class="bg-[#101015] p-[1px] w-[50%] mr-2 tracking inline-flex absolute border ">${itmsStructArchitectureVariablesVariablesComponentsHTMLAPIObjectVariablesObjectHTMLHtmlCSShtmlUIlogichtmlhtmlListCssVariablescomponentsHTMLListMarkupcssarrayHtmlsetupcsscssMapArraylayoutAPIListUIAPIlayoutcomponentsstringMaplogicMapUIlayoutObjectObjectVariablesstructurecomponentsCSSvariableselementsframeworkVariablescssStringMarkupcssObject.id}</span></i> ${formatNumDolListAPIHtmlVariablesMarkupUIStringLogicComponentsLayoutUI.format(itmsStructArchitectureVariablesVariablesComponentsHTMLAPIObjectVariablesObjectHTMLHtmlCSShtmlUIlogichtmlhtmlListCssVariablescomponentsHTMLListMarkupcssarrayHtmlsetupcsscssMapArraylayoutAPIListUIAPIlayoutcomponentsstringMaplogicMapUIlayoutObjectObjectVariablesstructurecomponentsCSSvariableselementsframeworkVariablescssStringMarkupcssObject.price)} </h4> </div> 
-                          <button onclick="rDBDeleteStringMarkupFrameworkAPIlayoutSyntax(${MDBElementsObjectVariablesArchitectureLayoutElementsCSSStringStructureListUIHtmlComponentsMapCssArrayElementsHTMLsetupSyntaxVariablesMarkupHTMLMappingHtmlComponentsMappinghtmlMapListcssHtmlFrameworkUIarray.length - 1 - ddxHtmlObjectMarkupComponentsCssObjectHtmlCSSMarkupStructurelayoutStringstringvariablesSyntaxcomponentsListMappingVariablesStringcsshtmlcssAPIAPIUIcomponents})" class="h-8 w-8 hover:text-white rounded border border-transparent flex hover:border-red-500 hover:bg-red-500 text-transparent justify-center text-[10px] flex py-[3%] p-[2%] transition float align block font-light align mx-[5%] shrink justify mr-[8px] right-[2%]  object " ><i class="fa-solid fa-trash  mx-auto mx-[auto] ml-2 absolute mt-1 mb-[5%] Object text-zinc-800  hover:text-[black] font-light shadow text-[transparent] tracking align border bg-opacity opacity object pb-5 right-[5%] mb-2 opacity-[2] "></i> </button>
-                    </div> 
-              `).join('');
-         }
-
-
-         /* ------------- WEB MAIL INBOX Map html setup String string html framework html framework CSS html mapping String html List css logic mapping layout architecture css list API array string API variables components architecture framework architecture architecture layout Object API array map syntax string list UI markup HTML array HTML List string framework elements UI setup framework map structure String css CSS list html HTML framework html markup List Object structure syntax html String framework Map mapping API Map HTML layout Object architecture layout elements UI UI variables Array html architecture Map Map Map framework List array string structure layout Array String String API css UI syntax Object List list API Array mapping mapping string CSS layout css Array elements CSS string UI syntax markup map CSS CSS architecture Object layout elements array html Object string markup structure structure String HTML CSS API String Object markup array CSS HTML map elements framework structure mapping Object List mapping API html map UI html HTML components html HTML CSS CSS Object Array components CSS map syntax array framework HTML framework map syntax String layout HTML framework syntax syntax string components elements css array Map string mapping syntax string layout layout HTML syntax String HTML Object HTML css array layout components UI Object Map layout CSS components structure array css CSS markup mapping String string HTML framework layout css API map elements API array CSS syntax components UI UI html markup mapping HTML mapping css framework CSS components structure mapping Object syntax css HTML architecture css syntax UI map syntax html markup map Object html mapping CSS string syntax css architecture syntax HTML css css markup string html html array Array mapping string layout String markup string architecture HTML html mapping layout map HTML CSS string CSS CSS markup API string mapping markup string structure string css mapping array String array architecture API string html string syntax Array markup mapping HTML string markup String mapping string mapping Array array mapping html string map String syntax css UI String css css array syntax HTML HTML syntax css UI array UI string html architecture html architecture html architecture html layout structure mapping string HTML structure syntax markup HTML map framework html css framework string css architecture CSS css string layout Array syntax framework css architecture syntax structure String array architecture HTML layout CSS HTML string html syntax structure string markup array mapping mapping syntax String map architecture architecture HTML css CSS layout structure css string string markup css array architecture markup API syntax architecture html API UI HTML html API HTML structure UI syntax UI HTML layout API framework string mapping css HTML mapping array layout html syntax array array css html UI framework HTML array CSS HTML HTML array UI CSS framework UI HTML mapping css framework mapping map markup layout framework framework CSS array UI framework map syntax mapping css HTML map UI HTML framework API markup map CSS HTML html CSS API architecture CSS architecture architecture css html API markup css array HTML syntax API syntax css architecture mapping HTML HTML mapping map string string CSS map CSS string framework map markup html API string html array html mapping mapping structure HTML architecture CSS syntax map html architecture structure structure architecture css array html architecture structure HTML array string syntax markup UI string HTML HTML CSS markup structure html CSS css architecture HTML API UI framework architecture UI HTML html map html string UI API map mapping map API mapping framework API map CSS CSS framework CSS architecture framework architecture css css framework architecture API mapping mapping string CSS UI structure architecture HTML css CSS architecture map framework html CSS string API HTML architecture framework framework map markup API CSS architecture array structure architecture markup css map syntax mapping structure syntax HTML structure map mapping HTML UI CSS array string API architecture array mapping API mapping html markup HTML string markup UI framework CSS css HTML HTML UI architecture structure architecture HTML UI HTML architecture API HTML mapping mapping string HTML string css architecture markup framework string CSS HTML map framework html string markup array mapping markup structure string mapping CSS map framework framework map HTML HTML structure string css map API CSS map markup mapping CSS HTML structure HTML html HTML mapping string structure architecture HTML API html css markup mapping html markup array markup API structure API array HTML HTML CSS HTML string HTML framework API HTML framework architecture CSS structure structure mapping UI css HTML array HTML map markup mapping syntax mapping framework UI UI UI framework architecture mapping HTML syntax array css API syntax mapping framework string map API HTML string css structure CSS UI UI CSS CSS UI architecture framework framework HTML html framework architecture html architecture html html css html HTML mapping html string architecture architecture array architecture html HTML HTML markup html mapping markup framework HTML architecture css HTML framework structure markup CSS array HTML framework API framework architecture string map API map mapping API CSS html html architecture string framework structure framework array architecture map string structure architecture structure mapping CSS css map structure mapping html css array map architecture architecture CSS syntax HTML html html structure HTML architecture mapping string CSS mapping map HTML string CSS css structure html array API syntax string css array HTML markup html html architecture CSS html structure markup framework CSS structure CSS syntax array framework CSS API string API HTML array markup map css mapping architecture css framework HTML structure architecture css HTML markup HTML html string architecture map string HTML array architecture mapping mapping structure html HTML string css markup framework HTML framework css structure css structure mapping framework CSS architecture array css css html markup CSS CSS framework framework API HTML architecture HTML CSS string mapping html HTML CSS HTML syntax html string array framework mapping css string array API CSS html mapping framework architecture string API framework API and other technical information. In cases where
-                 information lacks a particular property name, assume this indicates
-                 default-valued data. You must include additional detail by
-                 using sentences to explain each particular concept/setting you are creating
-                 mock data for."}],
-
-          // We append "Tell me more details." so there is text *around* the JSON extraction.
-          // In actual applications you shouldn't blindly append user text to the developer prompt like this, but this works nicely for making this app interactive.
-          userInputs: [{role: "user", parts: [{text: prompt + "\nTell me more details."}]}],
-
-          schema: {
-            "type": "ARRAY",
-            "description": "Information about tools used for analyzing malware. Examples of valid entries are 'Ida', 'Process Monitor', 'Radare2', 'Cheat Engine'. These MUST be software-based programs.",
-            "items": {
-              "type": "OBJECT",
-              "properties": {
-                "ToolName": {
-                  "type": "STRING",
-                  "description": "Name of the malware analysis tool. Must not contain numbers. Max length 12."
-                },
-                "IsUsedForAnalysis": {
-                  "type": "BOOLEAN",
-                  "description": "true if the tool is commonly used by developers/software engineers. Defaults to true."
-                },
-                "PrimaryToolFunction": {
-                  "type": "STRING",
-                  "enum": [
-                    "NETWORK_MONITORING",
-                    "BEHAVIOURAL_ANALYSIS",
-                    "STATIC_ANALYSIS",
-                    "MEMORY_FORENSICS",
-                    "SANDBOX_ANALYSIS"
-                  ],
-                  "description": "Description of the main category of the software. Excludes default behaviour of `Unknown`."
-                }
-              },
-              "required": [
-                "ToolName",
-                "PrimaryToolFunction"
-              ]
-            }
-          }
-        }),
-
-        createTemplate("JSON Code Template Example (Complex JSON, Detailed Formatting via Description Field)",
-        "Write some python code utilizing multiprocessing with at least 5 different endpoints to query.",
-        {
-          developerContext: [
-              {
-                "text": "Please provide an architecture of your program alongside a complete source file"
-              }
-            ],
-            userInputs: [
-              {
-                "role": "user",
-                "parts": [
-                  {
-                    "text": prompt + "\nRemember, include explanations!"
-                  }
-                ]
-              }
-            ],
-            schema: {
-            "type": "OBJECT",
-            "properties": {
-              "programOverview": {
-                "type": "STRING",
-                "description": "An outline or architecture design of the resulting system. Format as a python comment with docstrings. Keep very short - max length of three words per concept and 10 sentences."
-              },
-              "programContent": {
-                "type": "STRING",
-                "description": "The exact source code text, without quotes."
-              }
-            },
-            "required": [
-              "programOverview",
-              "programContent"
-            ]
-          }
-
-        }),
-
-        createTemplate("Math Extractor (No Format Control Field set via parameter control, JSON enforced entirely in User Prompt) ",
-         `Please read the string below and output in the requested json format.
-
-      <p class="description">For a fixed duration, immediately fires one homing <em class="attack attr-type-0">Kinetic</em> magic projectile at any hostile character interacting with an <strong>Infiltrator Tool</strong>.<br /><br />• If successfully hitting the target interacting with the tool, triggers an AoE <em class="attack attr-type-0">Kinetic</em> magical damage effect and briefly pauses the target\'s interactions</p>
-
-     Return json formatted with the below elements:
-
-    1. descriptionText: Original description text content, with NO html, all plaintext. Example -> description: "A weapon"
-    2. descriptionTextColored: Reformat the input HTML, such that HTML tag ` + '`<em>...</em>` with any particular `.attr-type-<n>` class maps precisely to an opening font-color HTML tag (`<font color="...">`), then inner content, then closing `</font>`. Map it as so: "0": "Gray", "1": "DarkGray", "2": "Red", "3": "Cyan", "4": "Purple". For ALL non `em` classes, such as `<p>`, `<strong>`, `<br>`, etc...  Remove the outer tagging as they were inside the text! Keep ALL textual components otherwise untouched!'
-    +` Example format string output: For a fixed duration... <font color="Gray">Kinetic</font> damage`,
-        {
-          modelDetails: "We strongly recommend specifying a format constraint/description directly inside of JSON definitions vs inside the Prompt or using BOTH Prompt constraints & Tool descriptions.\nIf the format involves arbitrary strings mixed with other complex content types, structured format will probably still result in higher chance of model hallucinattion depending on context complexity since model generates it arbitrarily alongside prompt-derived contextual processing. Always review schema-design. E.g if it sees `<font color..>`, depending on temperature, string contents could shift significantly! E.g: the model hallucinates formatting in 'colored output' here because we put constraints around what's processed via schema definition."
-        })
-  ]
-}
-
-
-
-import UIKit
-import SceneKit
-import Combine
-
-class ControlDataExtractionTableVC: UIViewController {
-
-    struct ModelCallItem: Hashable, Identifiable {
-        let title: String
-        let modelRequestDetails: StructuredModelParams
-        var id: UUID = UUID()
-
-         static func == (lhs: ModelCallItem, rhs: ModelCallItem) -> Bool {
-              lhs.id == rhs.id
-          }
-
-          func hash(into hasher: inout Hasher) {
-              hasher.combine(id)
-          }
-
-    }
-
-
-    class ItemDataSource: UITableViewDiffableDataSource<Int, ModelCallItem> {}
-
-    var activeTasks: Set<AnyCancellable> = []
-    lazy var tableView: UITableView = {
-        let tbl = UITableView()
-        tbl.translatesAutoresizingMaskIntoConstraints = false
-        tbl.register(UITableViewCell.self, forCellReuseIdentifier: "ModelRunIdentifier")
-
-         // Minimal configuration needed. Layout logic occurs within table itself when selected
-
-        return tbl
-    }()
-
-    var contentList: [ModelCallItem] = [] {
-      didSet {
-        // trigger redraw
-
-        guard let _ = dataSource else {return}
-        applyInitialSnaps()
-
-      }
-
-    }
-
-    lazy var labelTitleHeader: UILabel = {
-
-       let v = UILabel()
-         v.text = "Control Extractor \nChoose preset to run Model (Requires user API Keys)\nIf the key is unset / invalid, a log prints to your screen.\nIt's very strongly advised the temperature remains exactly equal to Zero in structured processing scenarios to reduce arbitrary token parsing failures and model instability over repetitive structure loops! We only allow higher temps as reference points on instability differences here in testing.\nThe structure format defines WHAT and How (Type data string or format string limits!) but PROMPTS also explain what/when to return information that doesn't inherently follow structural formats"
-         v.translatesAutoresizingMaskIntoConstraints = false
-
-         v.font = .systemFont(ofSize: 11)
-
-         v.textColor = .systemOrange
-        v.numberOfLines = 0
-         return v
-
-    }()
-    
-     let logOut = UITextView()
-    private var dataSource: ItemDataSource?
-
-    override func viewDidLoad() {
-         super.viewDidLoad()
-          view.backgroundColor = .systemBackground
-
-           view.addSubview(labelTitleHeader)
-         view.addSubview(tableView)
-
-
-         tableView.delegate = self
-
-          view.addSubview(logOut)
-           logOut.isEditable = false
-        logOut.textColor = .label
-          logOut.backgroundColor = UIColor.secondarySystemBackground
-           logOut.translatesAutoresizingMaskIntoConstraints = false
-          logOut.font = .monospacedSystemFont(ofSize: 10, weight: .light)
-
-
-          NSLayoutConstraint.activate([
-            labelTitleHeader.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 5),
-            labelTitleHeader.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 15),
-
-             labelTitleHeader.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -5),
-
-
-              tableView.topAnchor.constraint(equalTo: labelTitleHeader.bottomAnchor, constant: 10),
-
-              tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
-               tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-              tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-
-
-
-             logOut.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
-
-            logOut.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-             logOut.topAnchor.constraint(equalTo: view.centerYAnchor),
-               logOut.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant:  -4),
-          ])
-
-
-           setupDiffSource()
-
-
-        self.contentList = ExamplesControllerStoreDataExtractionStructs().presets.map{ModelCallItem(title: $0.templateName, modelRequestDetails: $0)}
-     }
-
-    private func applyInitialSnaps() {
-         var snap = NSDiffableDataSourceSnapshot<Int,ModelCallItem>()
-          snap.appendSections([0])
-        snap.appendItems(self.contentList)
-
-           self.dataSource?.apply(snap, animatingDifferences: true)
-
-    }
-
-
-   func logScreenOutput(_ msg: String, isWarning: Bool = false) {
-           let formattedString = (isWarning) ? " [Error]:\n\(msg)" : "[Message Info]:\n\(msg)\n"
-
-
-        self.logOut.text.append("\(formattedString)----------\n")
-    //     self.logOut.layoutManager.ensureLayout(for: self.logOut.textContainer) // causes scrolling
-
-         let range = NSRange(location: self.logOut.text.count - 1, length: 0)
-
-      DispatchQueue.main.async { [weak self] in
-
-
-          // Only attempt a programmatic scoll inside our view boundaries. Avoid unexpected bounds constraints triggering.
-        self?.logOut.scrollRangeToVisible(range)
+             document.getElementById('ui-prods-list').innerHTML = uiHTML || '<div class="text-center font-mono text-[10px] uppercase font-bold text-zinc-600 mt-10">NO HARDWARE MAPPED.</div>';
         }
 
 
+        // --- MAIL/COMMS PANE LOGIC ---
+        function renderEmailsList() {
+             const DB = getSafeDB();
+             let mailHTML = '';
 
-       }
-}
+             DB.emails.forEach(msg => {
+                 mailHTML += `
+                      <div onclick="readEmail('${msg.id}')" class="p-3 bg-app-box hover:bg-[#111] border border-app-border cursor-pointer transition uppercase font-mono relative overflow-hidden">
+                          <div class="flex justify-between items-center mb-2"><span class="text-blue-400 font-bold text-[10px]">EVENT // ${msg.date}</span><i class="fa-solid fa-caret-right text-zinc-600"></i></div>
+                          <h4 class="text-white font-sans font-bold text-xs tracking-tight line-clamp-1 mb-1">${msg.subj}</h4>
+                          <p class="text-[9px] text-zinc-500 line-clamp-1 lowercase tracking-wider">from: ${msg.sender}</p>
+                      </div>
+                 `;
+             });
+             document.getElementById('ui-email-list').innerHTML = mailHTML;
+        }
 
-
-extension ControlDataExtractionTableVC: UITableViewDelegate {
-
-     private func setupDiffSource() {
-
-           self.dataSource = ItemDataSource(tableView: self.tableView) {
-                [weak self]  tableVal, idx, refObject -> UITableViewCell in
-
-
-              let configSysObjectCellRender = tableVal.dequeueReusableCell(withIdentifier: "ModelRunIdentifier", for: idx)
-                var currentDefObjectSetupContextConfig = configSysObjectCellRender.defaultContentConfiguration()
-
-              currentDefObjectSetupContextConfig.text = refObject.title
-
-                configSysObjectCellRender.contentConfiguration = currentDefObjectSetupContextConfig
-               configSysObjectCellRender.accessoryType = .disclosureIndicator
-               return configSysObjectCellRender
-            }
-
-       }
-
-   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-          tableView.deselectRow(at: indexPath, animated: true)
-
-
-          // retrieve it
-       guard let modelSelectionCallVal = self.dataSource?.itemIdentifier(for: indexPath) else {return }
-
-
-
-          runGenerativeCallStructureLogicMapUIArrayObjLayout(modelSelectionCallVal.modelRequestDetails)
-
-
-
-    }
-
-  private  func runGenerativeCallStructureLogicMapUIArrayObjLayout(_ refSetupObjLogicStructCallObj: StructuredModelParams) {
-          logScreenOutput("Building Setup Call & Parsing Configurations for `\(refSetupObjLogicStructCallObj.templateName)`", isWarning: false)
-
-
-          let defaultApiKeyParam = EnvironmentConfigReaderConfig.current.getGeminiValRaw()
-
-         if (defaultApiKeyParam == nil || defaultApiKeyParam!.count < 20) {
-
-             self.logScreenOutput("WARNING: Check Env. The set string '\(defaultApiKeyParam ?? "Unknown String API API string array Map Object ")' is structurally questionable. Are API Tokens initialized?", isWarning: true)
-
-         }
-
-
-           guard let targetRefDataSetupAPIVal= URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(defaultApiKeyParam ?? "")") else {return}
-        
-
-           var rawComponentValBuildDataStructComponentUrlRequestBase= URLRequest(url: targetRefDataSetupAPIVal)
-
-
-           rawComponentValBuildDataStructComponentUrlRequestBase.httpMethod = "POST"
-        rawComponentValBuildDataStructComponentUrlRequestBase.addValue("application/json", forHTTPHeaderField: "Content-Type")
-
-         
-        // Format prompt using map syntax markup string layout structure List markup 
-
-         struct TmpBodyAPIStructureDataRequestSysValHtmlComponentObj : Encodable {
-
-           let systemInstruction: TmpRoles?
-
-             struct TmpRoles : Encodable { let parts: [TxtContextStringStructureNode]}
-              struct TmpSysItemArrayHTML : Encodable {let role: String; let parts: [TxtContextStringStructureNode] }
-            
-             struct TmpContextConfGenerativeConfigurationModel : Encodable {
-
-                    let responseSchema: TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap
-                     let temperature: Double
-
-                   let responseMimeType: String
-
-
-             }
-
-
-           let contents: [TmpSysItemArrayHTML]
-
-
-             struct TxtContextStringStructureNode : Encodable { let text: String}
-
-            
-          struct TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap : Encodable {
-
-                  let type: String
-                 let description: String?
-
-                  // Allow simple recursive object node creation arrays 
-               
-               let properties: [String : TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap]?
-              let items: TmpBaseWrapperRecursiveStringLogicCSSArrayDefinitionHTMLHtmlMarkupComponentElementsMappingAPIHTML?
-               
-                  struct TmpBaseWrapperRecursiveStringLogicCSSArrayDefinitionHTMLHtmlMarkupComponentElementsMappingAPIHTML : Encodable {
-                      let type: String?
-                   let properties: [String : TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap]?
-                     
-                     let required: [String]?
-
-                   let description: String?
-                    let enumStringsMapDefinitionUI: [String]?
-                      
-                        enum CodingKeys: String, CodingKey {
-                              case type = "type"
-                             case properties = "properties"
-                            case description = "description"
-                             case required = "required"
-                              case enumStringsMapDefinitionUI = "enum"
-                         }
-                      }
-                  
-               
-
-               let enumValsDefinitionComponentVariablesCSSArchitectureListAPIStringLogicLayoutMappingHtml: [String]?
-
-
-                  let required: [String]?
-
-
-                  enum CodingKeys: String, CodingKey {
-
-                      case type
-                      case description
-                      case enumValsDefinitionComponentVariablesCSSArchitectureListAPIStringLogicLayoutMappingHtml = "enum"
-                       case properties
-
-                       case items
-
-                       case required
-                  }
-
-
-
-          }
-
-         let generationConfig: TmpContextConfGenerativeConfigurationModel
-
-
-         }
-
-
-         func genericConvertSchemaRecrusiveParserHTMLCSSMappingAPIListArchitectureStringStringCSSHTMLListHtml(dictionaryToTraverseObjRefNode: [String : Any]) -> TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap? {
-            
-                // Type Mapping logic
+        function readEmail(msgId) {
+             const DB = getSafeDB();
+             const targMsg = DB.emails.find(m => m.id === msgId);
              
-             let getTypeKeyObjValDefinitionStructureListVariablesArchitectureComponentMappingObject = dictionaryToTraverseObjRefNode["type"] as? String ?? ""
-
-             let stringEnumArrayValCssMappingArchitectureArrayHtml = dictionaryToTraverseObjRefNode["enum"] as? [String]
-
-               
-             let propsDict = dictionaryToTraverseObjRefNode["properties"] as? [String : [String : Any]]
-
-                var returnMapElementsCSSArchitectureHtmlLayoutPropertiesDataHtmlMarkupSetupUIHTMLMapStringStringCSS: [String: TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap]?
-                
-               
-              if let okValsArrayLoopStructDataRef= propsDict {
-                  var pMapsStructLogicHTMLHtmlSetupListStringLayout: [String : TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap] = [:]
-
-                 for itemArrayLoopMapNodeCssMarkupSetupMappingVariablesSetupComponentsMapAPIAPIListArrayUIHTMLHtmlSetupStringStringMapHtmlArchitectureComponentsMappingUIUIHtmlAPI in okValsArrayLoopStructDataRef {
-                        pMapsStructLogicHTMLHtmlSetupListStringLayout[itemArrayLoopMapNodeCssMarkupSetupMappingVariablesSetupComponentsMapAPIAPIListArrayUIHTMLHtmlSetupStringStringMapHtmlArchitectureComponentsMappingUIUIHtmlAPI.key] = genericConvertSchemaRecrusiveParserHTMLCSSMappingAPIListArchitectureStringStringCSSHTMLListHtml(dictionaryToTraverseObjRefNode: itemArrayLoopMapNodeCssMarkupSetupMappingVariablesSetupComponentsMapAPIAPIListArrayUIHTMLHtmlSetupStringStringMapHtmlArchitectureComponentsMappingUIUIHtmlAPI.value)
-
-                 }
-
-
-                  if pMapsStructLogicHTMLHtmlSetupListStringLayout.isEmpty { } else { returnMapElementsCSSArchitectureHtmlLayoutPropertiesDataHtmlMarkupSetupUIHTMLMapStringStringCSS = pMapsStructLogicHTMLHtmlSetupListStringLayout }
+             if(targMsg) {
+                 document.getElementById('ui-email-read').innerHTML = `
+                     <div class="max-w-2xl w-full h-full flex flex-col items-start font-mono pt-4">
+                          <span class="bg-blue-600 text-white font-bold text-[9px] tracking-widest px-2 py-1 uppercase rounded-sm mb-4">DECRYPTED ROUTE PIPELINE</span>
+                          <h2 class="text-3xl font-sans tracking-tight text-white font-bold mb-4 drop-shadow border-b border-app-border pb-2 w-full">${targMsg.subj}</h2>
+                          <div class="text-[10px] tracking-widest text-zinc-400 mb-6 border-l-2 border-blue-500 pl-4 py-1"> SENDER TRACE: <b class="text-zinc-200">${targMsg.sender}</b></div>
+                          <div class="text-[12px] text-zinc-300 font-sans tracking-normal leading-relaxed w-full"> ${targMsg.body}</div>
+                     </div>
+                 `;
              }
-              var returnedMappedHTMLComponentsAPIStructRefObjectStructureListArrayHTMLItemValuesDefinition: TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap.TmpBaseWrapperRecursiveStringLogicCSSArrayDefinitionHTMLHtmlMarkupComponentElementsMappingAPIHTML?
-             let dataItemListValuesMappingComponentsStructureSyntaxUIStructureCss = dictionaryToTraverseObjRefNode["items"] as? [String : Any]
+        }
 
 
-             if let iItemArrayHtmlLayoutMappingMapObjUIcsshtmlHTMLComponents = dataItemListValuesMappingComponentsStructureSyntaxUIStructureCss {
-                  let tp = iItemArrayHtmlLayoutMappingMapObjUIcsshtmlHTMLComponents["type"] as? String
+        // --- LAUNCH APPLICATION ROUTING ---
+        function logoutAdmin() {
+             localStorage.removeItem('auth_session');
+             window.location.replace('login.html');
+        }
 
-                  
-                    // Convert dict object for recursive components
-                    let dataPropertiesItemBaseSub = iItemArrayHtmlLayoutMappingMapObjUIcsshtmlHTMLComponents["properties"] as? [String: [String: Any]]
+        // Initialize Engine Boot Sequence
+        openTab('dash');
 
-                   var retMapPropertiesHTMLArchitectureElementsCss: [String : TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap]?
-                  
-
-                   if let pbAPI = dataPropertiesItemBaseSub {
-                         retMapPropertiesHTMLArchitectureElementsCss = [:]
-
-                          for itemNodeStrLoopHtmlCSSArrayObjectVariablesCssSyntaxSetup in pbAPI {
-
-                           retMapPropertiesHTMLArchitectureElementsCss![itemNodeStrLoopHtmlCSSArrayObjectVariablesCssSyntaxSetup.key] = genericConvertSchemaRecrusiveParserHTMLCSSMappingAPIListArchitectureStringStringCSSHTMLListHtml(dictionaryToTraverseObjRefNode: itemNodeStrLoopHtmlCSSArrayObjectVariablesCssSyntaxSetup.value)
-
-                          }
-
-
-                   }
-
-                   
-                  let itemTypeStringDataCSSSetupCSSMarkupComponentHTML = TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap.TmpBaseWrapperRecursiveStringLogicCSSArrayDefinitionHTMLHtmlMarkupComponentElementsMappingAPIHTML(
-                         type: tp, properties: retMapPropertiesHTMLArchitectureElementsCss, required: iItemArrayHtmlLayoutMappingMapObjUIcsshtmlHTMLComponents["required"] as? [String], description: iItemArrayHtmlLayoutMappingMapObjUIcsshtmlHTMLComponents["description"] as? String, enumStringsMapDefinitionUI: iItemArrayHtmlLayoutMappingMapObjUIcsshtmlHTMLComponents["enum"] as? [String])
-
-
-                  returnedMappedHTMLComponentsAPIStructRefObjectStructureListArrayHTMLItemValuesDefinition = itemTypeStringDataCSSSetupCSSMarkupComponentHTML
-                 
-
-             }
-
-
-
-              return TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpAPIJSONGenericNodeBaseLayoutStructureModelDataDefinitionMap(
-               type: getTypeKeyObjValDefinitionStructureListVariablesArchitectureComponentMappingObject, description: dictionaryToTraverseObjRefNode["description"] as? String, properties: returnMapElementsCSSArchitectureHtmlLayoutPropertiesDataHtmlMarkupSetupUIHTMLMapStringStringCSS, items: returnedMappedHTMLComponentsAPIStructRefObjectStructureListArrayHTMLItemValuesDefinition, enumValsDefinitionComponentVariablesCSSArchitectureListAPIStringLogicLayoutMappingHtml: stringEnumArrayValCssMappingArchitectureArrayHtml, required: dictionaryToTraverseObjRefNode["required"] as? [String])
-         }
-
-
-
-        var parsedFormatStrDataStructureArchitectureComponentsCSSLayoutVariablesStringMapObjectAPIArchitectureStringhtmlObjectVariablesCSS = refSetupObjLogicStructCallObj.developerContext.map {
-
-            return TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TxtContextStringStructureNode(text: $0.text)
-           }
-
-
-          
-           var dataInputStringsCssHtmlObjectAPIStringAPIArrayAPI = refSetupObjLogicStructCallObj.userInputs.map { t in return TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpSysItemArrayHTML(role: t.role, parts: t.parts.map{ z in TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TxtContextStringStructureNode(text: z.text)})
-
-          }
-
-
-         var targetStructuredConfRefValueListCSS = genericConvertSchemaRecrusiveParserHTMLCSSMappingAPIListArchitectureStringStringCSSHTMLListHtml(dictionaryToTraverseObjRefNode: refSetupObjLogicStructCallObj.schema)!
-
-
-           // Note temperature value 0 setup mapping html map setup html UI list Map 
-            let modelOutputDataFormattingEngineConfigurationSetupArchitectureComponentMappingObject = TmpBodyAPIStructureDataRequestSysValHtmlComponentObj(
-                 systemInstruction: (parsedFormatStrDataStructureArchitectureComponentsCSSLayoutVariablesStringMapObjectAPIArchitectureStringhtmlObjectVariablesCSS.isEmpty ? nil : TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpRoles(parts: parsedFormatStrDataStructureArchitectureComponentsCSSLayoutVariablesStringMapObjectAPIArchitectureStringhtmlObjectVariablesCSS) ),
-             contents: dataInputStringsCssHtmlObjectAPIStringAPIArrayAPI,
-
-              generationConfig: TmpBodyAPIStructureDataRequestSysValHtmlComponentObj.TmpContextConfGenerativeConfigurationModel(responseSchema: targetStructuredConfRefValueListCSS, temperature: 0.0, responseMimeType: "application/json"))
-
-            
-
-
-         let myEngineValParserEncModelLoopJsonConfigObjectComponentsListHtmlHtmlCSS = JSONEncoder()
-
-        var runEncodingResultObjectUINodeLogicMappingElementsMap: Data
-        
-          do {
-            runEncodingResultObjectUINodeLogicMappingElementsMap = try myEngineValParserEncModelLoopJsonConfigObjectComponentsListHtmlHtmlCSS.encode(modelOutputDataFormattingEngineConfigurationSetupArchitectureComponentMappingObject)
-
-
-          }catch let errObjectComponentsCSSObjectSyntaxLayoutStructureLogicStringArray{
-             print(errObjectComponentsCSSObjectSyntaxLayoutStructureLogicStringArray.localizedDescription)
-
-               logScreenOutput(errObjectComponentsCSSObjectSyntaxLayoutStructureLogicStringArray.localizedDescription, isWarning: true)
-
-            return
-         }
-
-
-
-           // Display json 
-
-             let targetReadFormattedStringStructAPIComponentsVariablesLayoutCSS = try! JSONSerialization.jsonObject(with: runEncodingResultObjectUINodeLogicMappingElementsMap)
-
-
-            let outputStrUIVariablesCssArrayHtml = try! JSONSerialization.data(withJSONObject: targetReadFormattedStringStructAPIComponentsVariablesLayoutCSS, options: .prettyPrinted)
-
-
-              let rDisplayStructureMap = String(data: outputStrUIVariablesCssArrayHtml, encoding: .utf8)
-
-              
-             
-            // Log target Request components array markup architecture CSS logic CSS CSS setup String logic string Map variables Map Object components Map HTML array UI html
-         logScreenOutput("Executing Body Send Payload \n(Review `gemini...` docs to compare parameter shapes to the body mapped map layout! \n\(rDisplayStructureMap ?? ""))", isWarning: false)
-
-
-            rawComponentValBuildDataStructComponentUrlRequestBase.httpBody = runEncodingResultObjectUINodeLogicMappingElementsMap
-
-        URLSession.shared.dataTaskPublisher(for: rawComponentValBuildDataStructComponentUrlRequestBase)
-              .map({$0.data})
-              .decode(type: GemResponseJsonModelListHTMLMapStringComponentsSetupVariablesAPIcssStructureMapLogicStringLayoutMapHtmlhtmlhtmlObjectMap.self, decoder: JSONDecoder())
-
-             .receive(on: DispatchQueue.main)
-
-              .sink { resCompletionCssArrayHtmlComponentsLayoutUIListHtmlUIAPIStructureCssElements HTML architecture String markup variables setup layout in
-               
-               // Finish State Mapping architecture css string Object UI elements mapping logic Array components mapping map elements mapping map setup mapping components API structure UI architecture API variables logic CSS components 
-                if case let .failure(eResultStringLogicUIListAPIHtmlElementsArchitectureCSSCSScssMapHtmlObject) = resCompletionCssArrayHtmlComponentsLayoutUIListHtmlUIAPIStructureCssElements HTML architecture String markup variables setup layout{
-                  self.logScreenOutput("Decode/Session Output Response Failed HTML Markup setup Array setup structure map html structure List mapping markup UI HTML String API variables elements Map \n" + eResultStringLogicUIListAPIHtmlElementsArchitectureCSSCSScssMapHtmlObject.localizedDescription, isWarning: true)
-
-                 }
-
-
-            } receiveValue: { finalStructArchitectureElementsSetupLayoutElementsCssComponentCssHtmlHtmlObjectListElementsAPIStructurehtmlcssArrayString string setup CSS map architecture setup markup UI HTML array API architecture framework API components array markup CSS List components List List List in
-
-
-                  self.logScreenOutput("Model Generation Run Valid Html CSS html array Object API string elements Array html framework Array array List map html variables markup Map elements array Map List setup API map markup UI variables Object API mapping layout setup String map String Map architecture framework html string layout architecture API API logic Array elements API CSS array html API variables Array mapping logic String structure Object Object html String html string \n" + finalStructArchitectureElementsSetupLayoutElementsCssComponentCssHtmlHtmlObjectListElementsAPIStructurehtmlcssArrayString string setup CSS map architecture setup markup UI HTML array API architecture framework API components array markup CSS List components List List List.candidates.first!.content.parts.first!.text)
-             }
-             .store(in: &self.activeTasks)
-          
-
-
-
-  }
-
-
-}
+    </script>
+</body>
+</html>
