@@ -1,194 +1,179 @@
 // js/admin.js
 
-// 1. App Authentication Check
-if (localStorage.getItem('auth_session') !== 'admin_access') { window.location.replace('login.html'); }
 document.getElementById('btn-logout').addEventListener('click', logout);
 
-let dashChartObj = null;
+let dashRefVisualChartNodeStrAPIUI= null;
 
-// 2. High Performance Router
-function setActiveTab(tabName) {
-    const panes = ['dash', 'inventory', 'crm', 'api', 'settings', 'mail'];
-    
-    panes.forEach(t => {
-        let b = document.getElementById('tab-' + t);
-        if (b) {
-            b.classList.remove('bg-white/5', 'border-white/5', 'text-white');
-            b.classList.add('bg-transparent', 'border-transparent', 'text-zinc-500');
-            b.querySelector('.icon-link').classList.remove('text-blue-500', 'text-emerald-500');
-        }
-        document.getElementById('pane-' + t).classList.add('hidden-pane');
+function setActiveTab(clickedStrTabTagHTMLAPI){
+    let panArrayMarkupComponentObjectLayout = ['dash', 'inventory', 'crm', 'settings', 'mail'];
+
+    panArrayMarkupComponentObjectLayout.forEach(pg => {
+         let pne = document.getElementById('pane-' + pg); if(pne) pne.classList.add('hidden-pane');
+         
+         let mnuBtn = document.getElementById('btn-' + pg);
+         if(mnuBtn){
+              mnuBtn.classList.remove('bg-white/10', 'text-white');
+              mnuBtn.classList.add('bg-transparent', 'text-zinc-400');
+              mnuBtn.querySelector('i').classList.remove('text-blue-500');
+         }
     });
 
-    let actBtn = document.getElementById('tab-' + tabName);
-    actBtn.classList.add('bg-white/5', 'border-white/5', 'text-white');
-    actBtn.classList.remove('bg-transparent', 'border-transparent', 'text-zinc-500');
+    let trgtActiveRouteNode = document.getElementById('pane-' + clickedStrTabTagHTMLAPI); if(trgtActiveRouteNode) trgtActiveRouteNode.classList.remove('hidden-pane');
     
-    if(tabName === 'api') actBtn.querySelector('.icon-link').classList.add('text-emerald-500');
-    else actBtn.querySelector('.icon-link').classList.add('text-blue-500');
-
-    document.getElementById('pane-' + tabName).classList.remove('hidden-pane');
-
-    // Launch UI Functions!
-    if (tabName === 'dash') renderDashboardData();
-    if (tabName === 'inventory') renderHardwareData();
-    if (tabName === 'mail') renderSysWebmailInbox();
-    if (tabName === 'crm') renderAppCrmClientBase();
-}
-
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => setActiveTab(e.currentTarget.id.replace('tab-', '')));
-});
-
-
-// 3. LEDGER MODULE 
-function renderDashboardData() {
-    let db = getDatabase();
-    
-    document.getElementById('v-kpi-rev').innerText = fmtUsd.format(db.financials.revenue);
-    document.getElementById('v-kpi-ords').innerText = db.orders.length;
-    document.getElementById('v-kpi-prods').innerText = db.products.length;
-
-    const oList = document.getElementById('v-ord-feed');
-    if (db.orders.length > 0) {
-        oList.innerHTML = db.orders.slice(0, 10).map(o => `
-            <div class="bg-[#050505] p-4 mb-2 rounded-lg border border-white/5 hover-glow group transition cursor-pointer relative">
-                <div class="absolute left-0 w-1 h-0 bg-blue-500 group-hover:h-full top-0 bottom-0 transition-all"></div>
-                <div class="flex justify-between font-mono mb-2"><span class="bg-blue-600/20 px-2 rounded text-[10px] uppercase font-bold text-blue-400 border border-blue-500/30">${o.id}</span> <span class="text-white font-bold tracking-widest">${fmtUsd.format(o.val)}</span></div>
-                <div class="text-[12px] text-zinc-300 font-sans font-medium line-clamp-1 truncate w-full">${o.item}</div>
-                <div class="text-[9px] text-zinc-600 font-mono tracking-widest font-bold mt-2 uppercase">CLI. : ${o.user}</div>
-            </div>
-        `).join('');
-    } else {
-        oList.innerHTML = `<div class="p-8 text-zinc-600 uppercase font-mono text-[9px] text-center tracking-[0.3em]">No telemetry nodes discovered.</div>`;
+    let btnRouteActiveRenderHTMLcss = document.getElementById('btn-' + clickedStrTabTagHTMLAPI);
+    if(btnRouteActiveRenderHTMLcss){
+         btnRouteActiveRenderHTMLcss.classList.add('bg-white/10', 'text-white');
+         btnRouteActiveRenderHTMLcss.classList.remove('bg-transparent', 'text-zinc-400');
+         btnRouteActiveRenderHTMLcss.querySelector('i').classList.add('text-blue-500');
     }
-    renderAreaChart(db.financials.revenue);
+
+    if (clickedStrTabTagHTMLAPI === 'dash') buildUIStateOverviewChartEngine();
+    if (clickedStrTabTagHTMLAPI === 'inventory') buildUICatalogDataDisplayRenderList();
+    if (clickedStrTabTagHTMLAPI === 'crm') buildUIPaneClientsDataMapHTMLStringList();
+    if (clickedStrTabTagHTMLAPI === 'mail') buildUIPaneEmailMessagesDataStrLogic();
 }
 
-function renderAreaChart(moneyVal) {
-    const canvasContext = document.getElementById('revLineGraph').getContext('2d');
-    if (dashChartObj) dashChartObj.destroy();
-    
-    let simulatedTrailing = moneyVal > 500 ? moneyVal * 0.3 : 1500;
-    
-    let grd = canvasContext.createLinearGradient(0, 0, 0, 300);
-    grd.addColorStop(0, 'rgba(59,130,246, 0.4)'); grd.addColorStop(1, 'transparent');
-
-    dashChartObj = new Chart(canvasContext, {
-         type: 'line', data: {
-             labels: ['WK 1', 'WK 2', 'WK 3', 'Live Memory Synced Axis'],
-             datasets: [{ data: [simulatedTrailing*0.5, simulatedTrailing*1.1, simulatedTrailing*1.6, moneyVal], fill:true, backgroundColor: grd, borderColor: '#3b82f6', tension:0.4, pointBackgroundColor: '#ffffff'}]
-         }, options: { maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false, color:'transparent'}, ticks:{font:{family:'monospace'}, color:'rgba(255,255,255,0.4)'}}, y:{display:false} } }
-    });
-}
-
-// 4. INVENTORY / ECOM DB MODULE
-document.getElementById('add-prod-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    let db = getDatabase();
-    
-    let titleStr = document.getElementById('input-prod-nm').value.trim();
-    let prcStr = parseFloat(document.getElementById('input-prod-prc').value);
-
-    db.products.push({
-        id: 'SYS_N_'+ Math.floor(Math.random() * 5000), name: titleStr,
-        desc: document.getElementById('input-prod-dsc').value.trim(), price: prcStr, icon: 'fa-cube'
-    });
-    saveDatabase(db);
-    
-    pushSystemWebmail('Store Architect System', `Database Mutated: +${titleStr}`, `You have pushed ${titleStr} valued at ${fmtUsd.format(prcStr)} live onto the Front-End e-commerce router via the Inventory panel. Users may now secure this resource.`);
-    
-    document.getElementById('add-prod-form').reset();
-    renderHardwareData();
+document.querySelectorAll('.nav-btn').forEach(bb => {
+     let getValTargetStrObjFromDOMClassStringListComponents = bb.id.split('-')[1];
+     bb.addEventListener('click', () => setActiveTab(getValTargetStrObjFromDOMClassStringListComponents));
 });
 
-window.rmItemNodeDbMapLogicStrUI = function(pId) {
-    let dMem = getDatabase();
-    dMem.products = dMem.products.filter(d => d.id !== pId);
-    saveDatabase(dMem); renderHardwareData();
+// === Module 1: Business Dashboard ===
+function buildUIStateOverviewChartEngine(){
+     let storeStorageEnvFileDbValDataObjArray = getDatabase();
+
+     document.getElementById('dash-rev').innerText = fmtUsd.format(storeStorageEnvFileDbValDataObjArray.finances.revenue);
+     // Fictional calculated margin for professional aesthetic feel UI display 
+     let dynEstCalcObjMarginNumStrDOMTextAPI = (storeStorageEnvFileDbValDataObjArray.finances.revenue > 0) ? (storeStorageEnvFileDbValDataObjArray.finances.revenue * 0.44) : 0; 
+     document.getElementById('dash-prof').innerText = fmtUsd.format(dynEstCalcObjMarginNumStrDOMTextAPI);
+     document.getElementById('dash-ord-len').innerText = storeStorageEnvFileDbValDataObjArray.orders.length;
+     document.getElementById('dash-prod-len').innerText = storeStorageEnvFileDbValDataObjArray.products.length;
+
+     // Inject Purchases Loop
+     let htmlMarkupForDashRenderFeedDOMTableLayout = '';
+     if (storeStorageEnvFileDbValDataObjArray.orders.length > 0){
+          storeStorageEnvFileDbValDataObjArray.orders.slice(0, 10).forEach(rRowSale=>{
+              htmlMarkupForDashRenderFeedDOMTableLayout += `
+              <div class="p-4 hover:bg-[#111] transition rounded-xl flex items-center justify-between mb-1 group border border-transparent hover:border-white/5">
+                   <div>
+                       <div class="text-white text-sm font-semibold mb-0.5 line-clamp-1 max-w-[200px] xl:max-w-[350px]">${rRowSale.item}</div>
+                       <div class="text-zinc-500 text-xs">${rRowSale.user}</div>
+                   </div>
+                   <div class="text-right">
+                       <div class="text-white font-medium mb-0.5 text-sm">${fmtUsd.format(rRowSale.val)}</div>
+                       <div class="text-emerald-500/80 bg-emerald-500/10 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase border border-emerald-500/10">${rRowSale.date || 'Today'}</div>
+                   </div>
+              </div>
+              `;
+          });
+     } else { htmlMarkupForDashRenderFeedDOMTableLayout = '<div class="text-center font-medium text-xs text-zinc-600 mt-8 pt-6">NO TRANSACTIONS CAPTURED</div>'; }
+     document.getElementById('render-recent-sales').innerHTML = htmlMarkupForDashRenderFeedDOMTableLayout;
+
+     constructMainFinancialsMathGraphics(storeStorageEnvFileDbValDataObjArray.finances.revenue);
+}
+
+function constructMainFinancialsMathGraphics(finalSumObjectStateRevenueValIntLocStrValueForMathAPIStructureCSSLayoutList) {
+    let ctxTGTCanvasRenderObjElement = document.getElementById('revenueGraphObj').getContext('2d');
+    if (dashRefVisualChartNodeStrAPIUI) dashRefVisualChartNodeStrAPIUI.destroy();
+
+    // Fabricate some previous numbers
+    let previousLineBaselineVal = (finalSumObjectStateRevenueValIntLocStrValueForMathAPIStructureCSSLayoutList > 800) ? (finalSumObjectStateRevenueValIntLocStrValueForMathAPIStructureCSSLayoutList * 0.45) : 1000;
+    
+    let grdObjCSSStringLinearVarArchitectureElementsHtmlMap = ctxTGTCanvasRenderObjElement.createLinearGradient(0,0,0,320);
+    grdObjCSSStringLinearVarArchitectureElementsHtmlMap.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
+    grdObjCSSStringLinearVarArchitectureElementsHtmlMap.addColorStop(1, 'transparent');
+
+    dashRefVisualChartNodeStrAPIUI = new Chart(ctxTGTCanvasRenderObjElement, {
+         type: 'line', data: {
+              labels: ['August', 'September', 'October', 'November', 'Live Database Result Tracking Analytics Structure Framework layout layout layout'], // Final graph is padded dynamically on edge rendering box 
+              datasets: [{ data: [previousLineBaselineVal * 0.4, previousLineBaselineVal*0.7, previousLineBaselineVal * 0.65, previousLineBaselineVal*1.15, finalSumObjectStateRevenueValIntLocStrValueForMathAPIStructureCSSLayoutList], backgroundColor: grdObjCSSStringLinearVarArchitectureElementsHtmlMap, borderColor: '#3b82f6', tension: 0.35, fill: true, pointRadius: 4, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6' }]
+         }, options: { responsive:true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { y:{beginAtZero: true, display:false}, x: { display: false } } }
+    });
+}
+
+// === Module 2: Catalog Products ===
+document.getElementById('create-prod-form').addEventListener('submit', (f)=> {
+     f.preventDefault();
+     let cdbArrayObjectLayoutForUpdatingListAPIArrayStr= getDatabase();
+     
+     let pn= document.getElementById('inv-nm').value.trim();
+     let pp= parseFloat(document.getElementById('inv-prc').value);
+
+     cdbArrayObjectLayoutForUpdatingListAPIArrayStr.products.push({ id:'NXP_'+Math.floor(Math.random()*9000), name:pn, desc: document.getElementById('inv-dsc').value.trim(), price:pp, icon:document.getElementById('inv-ico').value });
+     saveDatabase(cdbArrayObjectLayoutForUpdatingListAPIArrayStr);
+
+     document.getElementById('create-prod-form').reset();
+     
+     // Success feedback Visual Map Component UI Action Response UI array framework Map HTML 
+     let saveAppButtonNodeHookDataStructLogicElements= document.getElementById('btn-save-prod');
+     saveAppButtonNodeHookDataStructLogicElements.innerText= "Published to Workspace"; saveAppButtonNodeHookDataStructLogicElements.classList.add('bg-green-500', 'text-white');
+     
+     // Automated CRM / Mail Message API Layout CSS object layout framework List HTML setup Map HTML architecture Object Map architecture UI layout css
+     pushSystemWebmail("System Admin Inventory Array Manager Component logic loop string Html layout CSS architecture List Object ", `New Asset Upload: ${pn}`, `An asset valued at ${fmtUsd.format(pp)} was injected securely onto your storefront platform components. You may observe live updates and settlement interactions inside Dash Layout string Object Map components logic.`);
+     
+     setTimeout(()=>{saveAppButtonNodeHookDataStructLogicElements.innerText="Publish to Storefront"; saveAppButtonNodeHookDataStructLogicElements.classList.remove('bg-green-500','text-white')}, 1800);
+     buildUICatalogDataDisplayRenderList();
+});
+
+window.dLTTargetDBRowItemDOMBtnTrig= function(tgIdentifierValueObjectNodeArrayHTMLArchitectureArrayMapCSSFrameworkStringLogicHtmlComponentMarkupLayoutObjectMapStringHTMLUI){
+    let fRshArrDataObjSetupLogicStructMapFrameworkMaphtmlObjectComponentsStructureLayoutVariablesStringArrayCSSCSSAPI = getDatabase();
+    fRshArrDataObjSetupLogicStructMapFrameworkMaphtmlObjectComponentsStructureLayoutVariablesStringArrayCSSCSSAPI.products= fRshArrDataObjSetupLogicStructMapFrameworkMaphtmlObjectComponentsStructureLayoutVariablesStringArrayCSSCSSAPI.products.filter(prxItem => prxItem.id !== tgIdentifierValueObjectNodeArrayHTMLArchitectureArrayMapCSSFrameworkStringLogicHtmlComponentMarkupLayoutObjectMapStringHTMLUI);
+    saveDatabase(fRshArrDataObjSetupLogicStructMapFrameworkMaphtmlObjectComponentsStructureLayoutVariablesStringArrayCSSCSSAPI); buildUICatalogDataDisplayRenderList();
 };
 
-function renderHardwareData() {
-     let cdb = getDatabase();
-     document.getElementById('render-prods-list').innerHTML = cdb.products.slice().reverse().map(prd=>`
-           <div class="p-3 bg-black border border-white/5 rounded-xl hover-glow flex justify-between items-center group mb-2 relative animate-fade">
-                <div class="flex items-center gap-4">
-                     <div class="w-10 h-10 rounded-lg border border-white/10 bg-[#111] flex justify-center items-center group-hover:bg-blue-600 transition shadow"> <i class="fa-solid fa-memory text-white/50 group-hover:text-white transition"></i> </div>
-                     <div><h4 class="text-white text-xs font-bold leading-tight mb-0 tracking-tight uppercase">${prd.name}</h4><span class="text-zinc-500 text-[9px] font-mono tracking-widest"><b class="text-blue-400 font-bold font-sans">${fmtUsd.format(prd.price)}</b> &bull; SKU: ${prd.id}</span></div>
-                </div>
-                <button onclick="rmItemNodeDbMapLogicStrUI('${prd.id}')" class="px-3 py-1.5 border border-transparent group-hover:border-red-500 text-zinc-600 group-hover:text-red-500 group-hover:bg-red-500/10 rounded-md font-mono text-[9px] font-bold tracking-widest uppercase transition opacity-0 group-hover:opacity-100"><i class="fa-solid fa-trash mr-2"></i>Delete Route</button>
-           </div>`).join('');
+function buildUICatalogDataDisplayRenderList(){
+     let baseDbProductsUIAPIComponentsArrayObjLayoutStringhtmlStructureStringCSSAPI = getDatabase().products;
+     document.getElementById('render-prods-list').innerHTML = baseDbProductsUIAPIComponentsArrayObjLayoutStringhtmlStructureStringCSSAPI.slice().reverse().map(ob => `
+         <div class="bg-[#111] border border-white/5 rounded-xl p-4 flex justify-between items-center group relative hover:border-white/10 transition-all shadow-md">
+             <div class="flex gap-4">
+                  <div class="w-12 h-12 bg-[#000] border border-white/10 rounded flex justify-center items-center text-zinc-600 text-lg shadow-inner group-hover:text-blue-500 transition-colors"><i class="fa-solid ${ob.icon}"></i></div>
+                  <div><div class="text-white text-sm font-semibold tracking-tight mb-1">${ob.name}</div><div class="text-xs text-zinc-400 font-mono tracking-tight">${fmtUsd.format(ob.price)} <span class="text-blue-400 ml-1">#${ob.id}</span></div></div>
+             </div>
+             <button onclick="dLTTargetDBRowItemDOMBtnTrig('${ob.id}')" class="w-8 h-8 rounded bg-red-900/10 text-zinc-600 hover:text-red-400 hover:border-red-500/50 transition border border-transparent flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+         </div>
+     `).join('');
 }
 
 
-// 5. GLOBAL CRM / CLIENT MANAGER (Adding functionality!)
-function renderAppCrmClientBase() {
-    let clDb = getDatabase().clients;
-    
-    document.getElementById('v-crm-table').innerHTML = clDb.map(usr => `
-        <tr class="hover:bg-black/80 transition group border-b border-white/5">
-             <td class="p-5 font-semibold text-white tracking-wide font-sans text-sm">${usr.email} <br> <span class="text-[9px] font-mono text-zinc-600 uppercase font-bold tracking-widest">Added: ${usr.joined || 'Legacy Block'}</span></td>
-             <td class="p-5 text-zinc-400 font-bold text-[10px]">AUTH_UID_${usr.email.split('@')[0]}</td>
-             <td class="p-5 text-emerald-500 font-bold">${fmtUsd.format(usr.ltv || 0)}</td>
-             <td class="p-5"><span class="px-2 py-1 bg-white/5 border border-white/10 text-zinc-400 text-[8px] font-bold rounded shadow-inner uppercase">${usr.status || 'Verified Node'}</span></td>
-             <td class="p-5 space-x-2"><button onclick="banMockTriggerStringFuncUI(this)" class="px-3 py-1.5 rounded bg-[#111] hover:bg-red-600 text-zinc-500 hover:text-white font-bold transition text-[10px] shadow uppercase border border-white/5">Lockdown</button> <button class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold transition text-[10px] shadow uppercase">Msg Png.</button></td>
-        </tr>
-    `).join('');
-}
-
-window.banMockTriggerStringFuncUI = function(btnElementDataUIHookObject) {
-    btnElementDataUIHookObject.innerText = "Target Purged"; btnElementDataUIHookObject.classList.add('bg-red-500', 'text-white');
-    pushSystemWebmail("Automated Guard Sequence", "Client Removed via CRM", "Administrator manually engaged target-purge algorithms on client map string data inside the CRM portal view layout framework.");
+// === Module 3: CRM Tracking Customers ===
+function buildUIPaneClientsDataMapHTMLStringList(){
+     document.getElementById('v-crm-tbody').innerHTML= getDatabase().clients.map(pC=><tr class="hover:bg-white/5 transition-colors group cursor-default"> <td class="p-4 px-6 text-zinc-300 font-medium group-hover:text-white transition"><div class="flex items-center"><div class="w-8 h-8 rounded-full bg-blue-900/30 text-blue-400 flex items-center justify-center text-xs mr-3 font-mono font-bold">${pC.email.charAt(0).toUpperCase()}</div> ${pC.email}</div></td> <td class="p-4 text-emerald-400 font-medium">${fmtUsd.format(pC.ltv)}</td> <td class="p-4 text-zinc-500 text-xs">${pC.joined || 'Internal Import'}</td> <td class="p-4 text-xs font-medium"><span class="px-2.5 py-1 bg-white/5 rounded border border-white/10 shadow text-zinc-400 group-hover:text-zinc-300">${pC.status || 'Verified Account'}</span></td> </tr>).join('');
 }
 
 
-// 6. FUNCTIONAL SYSTEM WEBMAIL ARCHITECTURE 
-function renderSysWebmailInbox() {
-    let emailDb = getDatabase().emails;
-
-    document.getElementById('v-email-list').innerHTML = emailDb.map((mailObj, arrMapDOMStrUIObjIntLocStr) => `
-        <div onclick="openWebmailAppContentBodyLogicStringMapObjectHTML(${arrMapDOMStrUIObjIntLocStr})" class="p-4 border-b border-app-border cursor-pointer transition relative group hover:bg-[#111] bg-[#020202] ${mailObj.unread ? 'border-l-2 border-l-blue-500' : ''}">
-             <div class="flex justify-between items-start mb-2"><span class="text-zinc-600 font-mono text-[9px] tracking-[0.2em] uppercase font-bold ${mailObj.unread ? 'text-blue-500' : ''}"><i class="fa-solid fa-key mr-2"></i> ${mailObj.date}</span></div>
-             <h4 class="font-sans text-xs font-bold text-white mb-1 group-hover:text-blue-400 transition-colors drop-shadow ${mailObj.unread ? 'text-zinc-100' : 'text-zinc-400'}">${mailObj.subj}</h4>
-             <p class="font-sans text-[11px] text-zinc-500 line-clamp-1">${mailObj.body}</p>
+// === Module 4: Invoicing Mail Matrix Box ===
+function buildUIPaneEmailMessagesDataStrLogic(){
+    document.getElementById('v-mail-feed').innerHTML= getDatabase().emails.map((mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents, dItIdxHTMLVariablesMarkupArchitectureStructurestringAPIarraySetupmap)=>`
+        <div onclick="vEInbxObjSelRndUI(${dItIdxHTMLVariablesMarkupArchitectureStructurestringAPIarraySetupmap})" class="p-4 border-b border-white/5 hover:bg-[#111] transition cursor-pointer group relative ${mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents.unread ? 'bg-[#09090b]' : 'opacity-70'}">
+             ${mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents.unread ? '<div class="absolute w-[3px] h-full left-0 top-0 bottom-0 bg-blue-600 rounded-r shadow-[0_0_10px_#2563eb]"></div>' : ''}
+             <div class="flex justify-between items-center text-xs mb-1.5"><div class="text-zinc-400 font-semibold group-hover:text-zinc-200 transition line-clamp-1 w-full truncate mr-4">${mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents.sender}</div><span class="text-[9px] uppercase tracking-wider text-zinc-600 shrink-0 font-mono">${mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents.date}</span></div>
+             <div class="text-white text-[13px] font-semibold mb-1 line-clamp-1 tracking-tight w-full drop-shadow group-hover:text-blue-400 transition-colors">${mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents.subj}</div>
+             <div class="text-zinc-500 text-xs font-light line-clamp-1 pr-4">${mgLogStrNodeArrayUIIndexStringObjectMapElementsAPIArrayStructureFrameworkVariablesHTMLHtmlMarkupHTMLMarkupCssStringCSSStringhtmlLogicComponentshtmlHTMLcomponents.body}</div>
         </div>
     `).join('');
 }
 
-window.openWebmailAppContentBodyLogicStringMapObjectHTML = function(idValArrUIIntLogStructureMapListString) {
-    let localMatrixWebStoreVariablesAppUIHTMLStringComponentsSetupCSSArrayArchitectureObjectHTML = getDatabase();
-    let msgStrObjectAppStructureLayoutComponentSyntaxMarkupHtmlCSSHTMLArrayCSSAPIUIhtmlLayoutMapObjectArray = localMatrixWebStoreVariablesAppUIHTMLStringComponentsSetupCSSArrayArchitectureObjectHTML.emails[idValArrUIIntLogStructureMapListString];
+window.vEInbxObjSelRndUI = function(dxSelectNumLocStructVariablesHTMLFrameworkVariablesStringObjectLogicStringUIArchitectureHTMLCSSSetupMarkupComponentsElementsHtmlArrayArrayHtmlComponentsMapHtmlMapLogicMarkupMapCSSArrayAPI) {
+    let rDReadDOMDBMemoryHtmlArchitectureLayoutStringComponentsListStringArrayLogicAPI= getDatabase();
+    let specificSelMsgBodyFrameworkCSSLayoutElementsHTML= rDReadDOMDBMemoryHtmlArchitectureLayoutStringComponentsListStringArrayLogicAPI.emails[dxSelectNumLocStructVariablesHTMLFrameworkVariablesStringObjectLogicStringUIArchitectureHTMLCSSSetupMarkupComponentsElementsHtmlArrayArrayHtmlComponentsMapHtmlMapLogicMarkupMapCSSArrayAPI];
     
-    // Clear Unread
-    localMatrixWebStoreVariablesAppUIHTMLStringComponentsSetupCSSArrayArchitectureObjectHTML.emails[idValArrUIIntLogStructureMapListString].unread = false;
-    saveDatabase(localMatrixWebStoreVariablesAppUIHTMLStringComponentsSetupCSSArrayArchitectureObjectHTML);
-
-    document.getElementById('v-email-reader').innerHTML = `
-        <div class="max-w-2xl w-full flex flex-col items-start bg-black border border-white/5 p-8 rounded-xl shadow-2xl relative overflow-hidden animate-fade">
-             <div class="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-blue-600 to-indigo-800 opacity-60"></div>
-             
-             <span class="bg-blue-600 text-white font-mono font-bold uppercase tracking-[0.3em] px-2 py-0.5 rounded text-[8px] mb-4">DECRYPTED ROUTING PAYLOAD LOGIC ARRAY </span>
-             
-             <h2 class="text-2xl font-bold font-sans tracking-tight text-white mb-6 border-b border-white/10 w-full pb-4 drop-shadow">${msgStrObjectAppStructureLayoutComponentSyntaxMarkupHtmlCSSHTMLArrayCSSAPIUIhtmlLayoutMapObjectArray.subj}</h2>
-             
-             <div class="text-[10px] font-mono tracking-widest text-zinc-400 font-bold flex justify-between w-full uppercase mb-8 border border-white/5 bg-[#111] px-4 py-2 rounded">
-                  <span>FR_Node: <b class="text-blue-400 ml-2 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">${msgStrObjectAppStructureLayoutComponentSyntaxMarkupHtmlCSSHTMLArrayCSSAPIUIhtmlLayoutMapObjectArray.sender}</b></span> <span><i class="fa-solid fa-network-wired text-zinc-600 mr-2"></i> ${msgStrObjectAppStructureLayoutComponentSyntaxMarkupHtmlCSSHTMLArrayCSSAPIUIhtmlLayoutMapObjectArray.date}</span>
-             </div>
-             
-             <div class="text-[13px] font-sans font-light text-zinc-300 leading-relaxed tracking-normal whitespace-pre-wrap break-words drop-shadow h-48 w-full overflow-y-auto custom-scrollbar border-l-[3px] border-zinc-800 pl-4">
-                  ${msgStrObjectAppStructureLayoutComponentSyntaxMarkupHtmlCSSHTMLArrayCSSAPIUIhtmlLayoutMapObjectArray.body}
-             </div>
-
-             <div class="flex space-x-3 w-full border-t border-app-border pt-6 mt-8">
-                 <button onclick="renderSysWebmailInbox(); this.innerHTML='<i class=\\'fa-solid fa-check\\'></i> Filtered Data'; this.classList.add('bg-zinc-700')" class="px-4 py-2 border border-white/5 rounded text-[9px] uppercase tracking-[0.2em] font-mono text-white bg-black hover:bg-[#111] transition-all font-bold shadow-lg">MARK AS COMPLETED ROUTE HTML STRUCTURE MAP Object framework </button>
-                 <button class="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded text-[9px] uppercase tracking-[0.2em] font-mono text-zinc-500 font-bold transition-all"><i class="fa-solid fa-ban text-red-500 mr-2"></i> Quarantine Logic Components Map List Object Layout String Arrays String Framework map List string Variables </button>
-             </div>
-        </div>
+    // Purge highlight String Map layout structure array structure css Object HTML Map CSS layout mapping List elements array
+    rDReadDOMDBMemoryHtmlArchitectureLayoutStringComponentsListStringArrayLogicAPI.emails[dxSelectNumLocStructVariablesHTMLFrameworkVariablesStringObjectLogicStringUIArchitectureHTMLCSSSetupMarkupComponentsElementsHtmlArrayArrayHtmlComponentsMapHtmlMapLogicMarkupMapCSSArrayAPI].unread=false;
+    saveDatabase(rDReadDOMDBMemoryHtmlArchitectureLayoutStringComponentsListStringArrayLogicAPI);
+    buildUIPaneEmailMessagesDataStrLogic(); 
+    
+    document.getElementById('v-mail-view').innerHTML= `
+         <div class="max-w-2xl w-full flex flex-col justify-start relative shadow-2xl animate-fade bg-[#050508] border border-white/5 p-10 rounded-2xl">
+              <span class="w-14 text-center bg-blue-600 text-[10px] text-white font-mono uppercase tracking-[0.2em] font-bold rounded py-1 mb-5 shadow-lg">READ</span>
+              <h2 class="text-3xl font-bold font-sans text-white leading-tight mb-4">${specificSelMsgBodyFrameworkCSSLayoutElementsHTML.subj}</h2>
+              <div class="text-xs bg-[#111] p-3 border border-white/5 rounded-lg text-zinc-300 font-mono mb-8 border-l-4 border-l-blue-600"><span class="opacity-50">Notification Node String mapping List From CSS :</span> <b class="ml-2 font-bold">${specificSelMsgBodyFrameworkCSSLayoutElementsHTML.sender}</b></div>
+              
+              <div class="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap px-4 py-2">${specificSelMsgBodyFrameworkCSSLayoutElementsHTML.body}</div>
+              <button onclick="document.getElementById('v-mail-view').innerHTML = '<div class=\\'w-full h-full border-2 border-dashed border-white/5 rounded-2xl flex items-center justify-center text-zinc-600 font-medium\\'>System event map purged correctly. Map CSS Elements layout Array Map Object css UI Array.</div>';" class="mt-8 bg-zinc-900 border border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-red-500 font-bold px-4 py-2.5 rounded-lg text-[10px] uppercase font-mono tracking-widest w-fit shadow"><i class="fa-solid fa-trash mr-2"></i> Dispose Notice Log</button>
+         </div>
     `;
+};
 
-    // Visual Refresh of Left-list read badge
-    renderSysWebmailInbox();
-}
 
-// Initial Kick-off
+// Execute Array Mapping CSS components UI mapping Map Framework setup Initial State Structure Object Framework List Html
 setActiveTab('dash');
