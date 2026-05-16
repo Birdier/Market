@@ -1,168 +1,260 @@
 // js/admin.js
 
+// 1. App Authentication Check
 if (localStorage.getItem('auth_session') !== 'admin_access') { window.location.replace('login.html'); }
-document.getElementById('btn-logout').addEventListener('click', logout);
+document.getElementById('btn-logout').addEventListener('click', () => {
+    localStorage.removeItem('auth_session'); window.location.replace('login.html');
+});
 
-let dChartObjectStr= null;
-let terminalRunIntervalNodeLogic = null; // specifically handles the animation hook string UI map element map Array CSS Object markup layout mapping logic html markup variables list Html 
+// 2. High Performance Router
+let currentTerminalLoop = null;
+let dashChartObj = null;
 
-function setActiveTab(pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML){
-    const routeHTMLArrayMappingComponentSetupVariablesListMap = ['dash', 'inventory', 'crm', 'api', 'settings', 'mail'];
-
-    routeHTMLArrayMappingComponentSetupVariablesListMap.forEach(rID => {
-         let pObj = document.getElementById('pane-' + rID); if(pObj) pObj.classList.add('hidden-pane');
-         
-         let bObj = document.getElementById('btn-' + rID);
-         if(bObj){
-              bObj.classList.remove('bg-white/10', 'text-white'); bObj.classList.add('bg-transparent', 'text-zinc-500');
-              bObj.querySelector('i').classList.remove('text-blue-500', 'text-emerald-500');
-         }
+function setActiveTab(tabName) {
+    const panes = ['dash', 'inventory', 'crm', 'api', 'settings', 'mail'];
+    
+    // Shut off terminal loop if user navigates away to save RAM
+    clearInterval(currentTerminalLoop);
+    
+    panes.forEach(t => {
+        let b = document.getElementById('btn-' + t);
+        if (b) {
+            b.classList.remove('bg-white/10', 'text-white', 'border-white/5');
+            b.classList.add('bg-transparent', 'border-transparent', 'text-zinc-500');
+            b.querySelector('.nav-icon')?.classList.remove('text-blue-500', 'text-emerald-500');
+        }
+        document.getElementById('pane-' + t)?.classList.add('hidden-pane');
     });
 
-    let sPane = document.getElementById('pane-' + pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML); if(sPane) sPane.classList.remove('hidden-pane');
-    
-    let sBtn = document.getElementById('btn-' + pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML);
-    if(sBtn){
-         sBtn.classList.add('bg-white/10', 'text-white'); sBtn.classList.remove('bg-transparent', 'text-zinc-500');
-         if(pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML === 'api') sBtn.querySelector('i').classList.add('text-emerald-500');
-         else sBtn.querySelector('i').classList.add('text-blue-500');
+    let actBtn = document.getElementById('btn-' + tabName);
+    if(actBtn) {
+        actBtn.classList.add('bg-white/10', 'border-white/5', 'text-white');
+        actBtn.classList.remove('bg-transparent', 'border-transparent', 'text-zinc-500');
+        let actIcon = actBtn.querySelector('.nav-icon');
+        if(actIcon) {
+            actIcon.classList.add(tabName === 'api' ? 'text-emerald-500' : 'text-blue-500');
+        }
     }
+    document.getElementById('pane-' + tabName)?.classList.remove('hidden-pane');
 
-    clearInterval(terminalRunIntervalNodeLogic); // Always cut ping simulation layout variables array markup
-
-    // Build routes elements Object structure elements components API layout map layout CSS elements Object
-    if (pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML === 'dash') { loadDashLogicListStructureArraySetupAPIHTML(); }
-    if (pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML === 'inventory') { buildInventoryElementsMapHtmlObjectArrayCssUIList(); }
-    if (pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML === 'crm') { spawnAppMatrixClientDataListFrameworkMapLayoutVariablesLogicObjectComponentsSetupMapCSS(); }
-    if (pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML === 'api') { terminalEngageStartAPIListStringMappingHTMLHTML(); }
-    if (pgCallMapCSSStringLogicArchitectureHtmlLayoutHTML === 'mail') { mailEngineSetupSyntaxArrayStringArchitectureMapArrayMarkup(); }
+    // Launch Functional Controllers!
+    if (tabName === 'dash') renderDashboardData();
+    if (tabName === 'inventory') renderHardwareData();
+    if (tabName === 'crm') renderAppCrmClientBase();
+    if (tabName === 'api') engageTerminalInterface();
+    if (tabName === 'mail') renderSysWebmailInbox();
 }
 
-document.querySelectorAll('.nav-btn').forEach(btnAction => {
-     let domRouteMapTargetUIComponentCSSLayoutObjectLogicMapHtmlList= btnAction.id.split('-')[1];
-     btnAction.addEventListener('click', () => setActiveTab(domRouteMapTargetUIComponentCSSLayoutObjectLogicMapHtmlList));
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => setActiveTab(e.currentTarget.id.replace('btn-', '')));
 });
 
 
-// 1. DASHBOARD MAP
-function loadDashLogicListStructureArraySetupAPIHTML(){
-     let envDB = getDatabase();
-     document.getElementById('dash-rev').innerText = fmtUsd.format(envDB.finances.revenue);
-     document.getElementById('dash-prof').innerText = (envDB.finances.revenue > 0) ? fmtUsd.format(envDB.finances.revenue * 0.44) : '$0.00'; 
-     document.getElementById('dash-ord-len').innerText = envDB.orders.length;
-     document.getElementById('dash-prod-len').innerText = envDB.products.length;
+// 3. LEDGER DASHBOARD MODULE
+const fxUsd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-     const lstBoxObjectArrayMarkup= document.getElementById('render-recent-sales');
-     if (envDB.orders.length > 0){
-          lstBoxObjectArrayMarkup.innerHTML = envDB.orders.slice(0, 8).map(oS=><div class="p-3 bg-[#111] hover:bg-[#18181c] border border-white/5 transition rounded-xl mb-1 cursor-default group"><div class="flex justify-between font-mono items-center mb-1"><span class="text-[9px] uppercase tracking-widest text-zinc-500 font-bold bg-[#030303] px-2 py-0.5 border border-zinc-900 rounded">${oS.id}</span> <span class="text-blue-400 font-bold text-xs tracking-wider">${fmtUsd.format(oS.val)}</span></div><div class="text-[11px] font-semibold text-zinc-300 line-clamp-1 mb-1 font-sans">${oS.item}</div><div class="text-[8px] font-mono tracking-widest text-zinc-600 uppercase font-bold">${oS.user}</div></div>).join('');
-     } else { lstBoxObjectArrayMarkup.innerHTML = '<div class="text-zinc-600 mt-6 text-center font-mono text-[9px] font-bold uppercase tracking-widest">Null Handshakes Acquired</div>'; }
-
-     drawDCanvasAPIHtmlStructure(envDB.finances.revenue);
-}
-function drawDCanvasAPIHtmlStructure(fnumMapArrayUIAPIListCSSHTMLHTMLListComponentsLogicArrayComponentsListHTMLMarkup) {
-    let ctxBaseCanvasMappingComponentArrayHTMLMapStructureCssUIArray = document.getElementById('revenueGraphObj').getContext('2d');
-    if (dChartObjectStr) dChartObjectStr.destroy();
-    let simLDataPointMathSyntaxFrameworkArrayMappingStringObjectObjectStringStringMappingCssHtmlListElements = (fnumMapArrayUIAPIListCSSHTMLHTMLListComponentsLogicArrayComponentsListHTMLMarkup > 200) ? (fnumMapArrayUIAPIListCSSHTMLHTMLListComponentsLogicArrayComponentsListHTMLMarkup * 0.5) : 3250;
+function renderDashboardData() {
+    let db = getDatabase();
     
-    let baseDrawColorVisualObjectCSSMapMarkupVariablesSetupArrayArrayCssAPIStringMappingFrameworkCssListFrameworkHTMLmarkup = ctxBaseCanvasMappingComponentArrayHTMLMapStructureCssUIArray.createLinearGradient(0,0,0,320);
-    baseDrawColorVisualObjectCSSMapMarkupVariablesSetupArrayArrayCssAPIStringMappingFrameworkCssListFrameworkHTMLmarkup.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
-    baseDrawColorVisualObjectCSSMapMarkupVariablesSetupArrayArrayCssAPIStringMappingFrameworkCssListFrameworkHTMLmarkup.addColorStop(1, 'transparent');
+    document.getElementById('dash-rev').innerText = fxUsd.format(db.finances.revenue);
+    document.getElementById('dash-prof').innerText = (db.finances.revenue > 0) ? fxUsd.format(db.finances.revenue * 0.35) : '$0.00';
+    document.getElementById('dash-ord-len').innerText = db.orders.length;
+    document.getElementById('dash-prod-len').innerText = db.products.length;
 
-    dChartObjectStr = new Chart(ctxBaseCanvasMappingComponentArrayHTMLMapStructureCssUIArray, { type: 'line', data: { labels: ['Point A', 'Point B', 'Point C', 'Live Aggregated Sum Variables Setup HTML Architecture Elements css Array HTML architecture framework layout'], datasets: [{ data: [simulatedPointCalculusArrayArchitectureCSSMappingListAPIlayoutHTMLStringHTMLCSSlogichtmlcomponentsSetupStructure(simLDataPointMathSyntaxFrameworkArrayMappingStringObjectObjectStringStringMappingCssHtmlListElements), simLDataPointMathSyntaxFrameworkArrayMappingStringObjectObjectStringStringMappingCssHtmlListElements, simLDataPointMathSyntaxFrameworkArrayMappingStringObjectObjectStringStringMappingCssHtmlListElements*1.4, fnumMapArrayUIAPIListCSSHTMLHTMLListComponentsLogicArrayComponentsListHTMLMarkup], backgroundColor: baseDrawColorVisualObjectCSSMapMarkupVariablesSetupArrayArrayCssAPIStringMappingFrameworkCssListFrameworkHTMLmarkup, fill: true, borderColor: '#3b82f6', tension: 0.2, pointBackgroundColor: 'white' }] }, options: { maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { x:{grid:{display:false, color:'transparent'}, ticks:{font:{family:'monospace'}, color:'rgba(255,255,255,0.4)'}}, y:{display:false} } }});
-}
-function simulatedPointCalculusArrayArchitectureCSSMappingListAPIlayoutHTMLStringHTMLCSSlogichtmlcomponentsSetupStructure(nValueMathFloatCSShtml){ return nValueMathFloatCSShtml * (Math.random() * 0.8 + 0.5); }
-
-
-// 2. INVENTORY Map list String logic array Html Array UI
-document.getElementById('create-prod-form').addEventListener('submit', (fA)=> {
-     fA.preventDefault(); let dbO = getDatabase();
-     let txtDScTitleUIArrayElementsFrameworkStringVariablesArrayhtmlObjectStringStructureVariablesCSSStringListAPIhtmlListMapcsshtmlList = document.getElementById('inv-nm').value.trim();
-     dbO.products.push({ id:'ITM_SEC_'+Math.floor(Math.random()*85000), name:txtDScTitleUIArrayElementsFrameworkStringVariablesArrayhtmlObjectStringStructureVariablesCSSStringListAPIhtmlListMapcsshtmlList, desc:document.getElementById('inv-dsc').value.trim(), price:parseFloat(document.getElementById('inv-prc').value), icon:document.getElementById('inv-ico').value });
-     saveDatabase(dbO); document.getElementById('create-prod-form').reset();
-     
-     let btnNodeSHTMLList= document.getElementById('btn-save-prod'); btnNodeSHTMLList.innerText= "Entity Generated"; btnNodeSHTMLList.classList.add('bg-blue-600', 'text-white', 'border-transparent');
-     pushSystemWebmail("Object Generation Process Logic List CSS mapping structure css setup UI CSS html Map logic Array list ", `Addition: ${txtDScTitleUIArrayElementsFrameworkStringVariablesArrayhtmlObjectStringStructureVariablesCSSStringListAPIhtmlListMapcsshtmlList} Node html HTML elements elements html array logic`, `Live routing added hardware successfully. Your active public E-commerce page will parse the elements dynamically natively mapping database state variable String string API components array components string API html layout.`);
-     
-     setTimeout(()=>{btnNodeSHTMLList.innerText="Publish to Storefront"; btnNodeSHTMLList.classList.remove('bg-blue-600','text-white','border-transparent')},1800);
-     buildInventoryElementsMapHtmlObjectArrayCssUIList();
-});
-window.destroyHWStoreMappingIdFunctionSetupFrameworkCSShtmlStructureListHtml = function(prIndexVarDataHTMLObjectStructureListHTMLMapUIFrameworkStringMappingStringFrameworkElements){
-    let fA = getDatabase(); fA.products = fA.products.filter(zX=> zX.id !== prIndexVarDataHTMLObjectStructureListHTMLMapUIFrameworkStringMappingStringFrameworkElements);
-    saveDatabase(fA); buildInventoryElementsMapHtmlObjectArrayCssUIList();
-}
-function buildInventoryElementsMapHtmlObjectArrayCssUIList(){
-    let prodA = getDatabase().products;
-    document.getElementById('render-prods-list').innerHTML = prodA.slice().reverse().map(hw=> `
-        <div class="bg-[#111] p-4 rounded-xl flex justify-between items-center group shadow-md border border-white/5 transition hover:border-white/20">
-             <div class="flex gap-4 items-center">
-                  <div class="w-12 h-12 bg-black border border-white/5 rounded-lg flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors"><i class="fa-solid ${hw.icon}"></i></div>
-                  <div><h4 class="text-white text-xs font-semibold">${hw.name}</h4><div class="text-[10px] text-zinc-500 font-mono tracking-widest mt-0.5"><span class="font-sans font-bold text-zinc-300 tracking-tight">${fmtUsd.format(hw.price)}</span> | ID: ${hw.id}</div></div>
-             </div>
-             <button onclick="destroyHWStoreMappingIdFunctionSetupFrameworkCSShtmlStructureListHtml('${hw.id}')" class="px-4 py-2 border border-white/5 bg-[#030303] text-red-500/80 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500 transition rounded-lg text-[9px] uppercase tracking-widest font-mono font-bold active:scale-95 opacity-0 group-hover:opacity-100 shadow-sm"><i class="fa-solid fa-ban"></i> Delete Object HTML variables syntax structure layout map HTML string</button>
-        </div>`).join('');
-}
-
-
-// 3. CRM EXPORTER AND GENERATOR Logic HTML map elements architecture array setup Object string string logic structure syntax elements mapping 
-function spawnAppMatrixClientDataListFrameworkMapLayoutVariablesLogicObjectComponentsSetupMapCSS() {
-    let clientsNodeDBClientsMatrixHtmlElementsArrayMarkupLayoutAPIObject= getDatabase().clients;
-    document.getElementById('v-crm-tbody').innerHTML= clientsNodeDBClientsMatrixHtmlElementsArrayMarkupLayoutAPIObject.map(pData=><tr class="hover:bg-white/5 transition-colors group text-[11px] font-sans"> <td class="p-4 px-6 text-zinc-300 font-medium group-hover:text-white transition flex items-center gap-3"><div class="w-8 h-8 rounded border border-blue-500/30 bg-blue-600/10 flex items-center justify-center font-mono font-bold text-blue-400">${pData.email.charAt(0).toUpperCase()}</div> <span class="tracking-wide">${pData.email}</span></td> <td class="p-4 text-emerald-400 font-medium">${fmtUsd.format(pData.ltv)}</td> <td class="p-4 text-zinc-500 tracking-wider">${pData.joined || 'Beta Upload CSS elements Map Object CSS Object UI syntax Html '}</td> <td class="p-4"><span class="px-2.5 py-1.5 bg-[#111] rounded shadow-inner uppercase tracking-wider text-[8px] font-bold font-mono text-zinc-400 border border-white/5 shadow-black group-hover:border-white/10">${pData.status || 'Secured Account Layout architecture '}</span></td> </tr>).join('');
-}
-// ACTIVE EXPORT CSV ACTION FUNCTIONALITY list syntax setup mapping Object variables elements layout elements components Object string
-document.getElementById('crm-csv-btn').addEventListener('click', (mDomActionButtonObjectVariablesCSSMapCSSMappingStructureHTMLmarkupVariablesFrameworkArrayArchitectureListFrameworkHTML)=> {
-     mDomActionButtonObjectVariablesCSSMapCSSMappingStructureHTMLmarkupVariablesFrameworkArrayArchitectureListFrameworkHTML.preventDefault();
-     const fullMemoryTargetMappingAPIHtmlAPIHtmlcssVariablescomponentsHTMLhtmlVariablesLogicArchitecturecomponents = getDatabase().clients;
-     if(fullMemoryTargetMappingAPIHtmlAPIHtmlcssVariablescomponentsHTMLhtmlVariablesLogicArchitecturecomponents.length === 0){ alert("Database table is effectively zero format. Array structure."); return; }
-
-     let cssSheetHTMLVariablesUIObjectArrayhtmlhtmlArrayStructureMappingLayoutObjectLogicMapComponentsStringStructureMarkupArchitectureLayoutAPIHtmlListSetupArchitectureFrameworkVariablesCSSComponentsStringHtmlArrayStringArrayString = "Client Hash String layout CSS array css HTML,Lifetime Payment Node Framework elements,Added On Map list array setup UI components layout Map \n" + fullMemoryTargetMappingAPIHtmlAPIHtmlcssVariablescomponentsHTMLhtmlVariablesLogicArchitecturecomponents.map(iObjMapElementsLayoutArraycssLayoutUIcomponentsCSSMap=> `"${iObjMapElementsLayoutArraycssLayoutUIcomponentsCSSMap.email}","${iObjMapElementsLayoutArraycssLayoutUIcomponentsCSSMap.ltv}","${iObjMapElementsLayoutArraycssLayoutUIcomponentsCSSMap.joined}"`).join('\n');
-     
-     let buildLinkElementObjLayouthtml= document.createElement('a');
-     let stringBlobGenAPIArchitecturehtmlList= new Blob([cssSheetHTMLVariablesUIObjectArrayhtmlhtmlArrayStructureMappingLayoutObjectLogicMapComponentsStringStructureMarkupArchitectureLayoutAPIHtmlListSetupArchitectureFrameworkVariablesCSSComponentsStringHtmlArrayStringArrayString], {type: 'text/csv;charset=utf-8;'});
-     buildLinkElementObjLayouthtml.href = URL.createObjectURL(stringBlobGenAPIArchitecturehtmlList);
-     buildLinkElementObjLayouthtml.setAttribute('download', `Nexus_Client_Table_${new Date().getTime()}.csv`);
-     document.body.appendChild(buildLinkElementObjLayouthtml); buildLinkElementObjLayouthtml.click(); document.body.removeChild(buildLinkElementObjLayouthtml);
-
-     mDomActionButtonObjectVariablesCSSMapCSSMappingStructureHTMLmarkupVariablesFrameworkArrayArchitectureListFrameworkHTML.target.innerHTML = "<i class='fa-solid fa-check'></i> Render Success html Map string "; setTimeout(()=>{mDomActionButtonObjectVariablesCSSMapCSSMappingStructureHTMLmarkupVariablesFrameworkArrayArchitectureListFrameworkHTML.target.innerHTML = '<i class="fa-solid fa-file-csv mr-2 text-[12px]"></i> Dump Ledger Sheet string String CSS mapping Object CSS string Map CSS components CSS ';}, 2000);
-});
-
-
-// 4. THE WEBHOOKS AND DEV LAYER PANE html mapping variables HTML list
-window.copyTriggerVal = function(tgTxtDOMMappingDataComponentsAPIArrayMarkupHTMLlistStructureElementsFrameworkUIArrayMarkupMarkupStringHTMLComponentsMarkupStringLayoutHtmlcssLayoutObjectMappingObjectAPIAPIcssCSSArchitectureUIArchitectureLogicLayoutUIhtmlStringArchitectureArrayListHTMLAPIStructureStringVariableshtmlSyntaxLogicStringArrayStringListSyntaxhtmlStructureHTMLCSSHTMLStringStringArraystring) {
-     navigator.clipboard.writeText(tgTxtDOMMappingDataComponentsAPIArrayMarkupHTMLlistStructureElementsFrameworkUIArrayMarkupMarkupStringHTMLComponentsMarkupStringLayoutHtmlcssLayoutObjectMappingObjectAPIAPIcssCSSArchitectureUIArchitectureLogicLayoutUIhtmlStringArchitectureArrayListHTMLAPIStructureStringVariableshtmlSyntaxLogicStringArrayStringListSyntaxhtmlStructureHTMLCSSHTMLStringStringArraystring);
-     // Little effect string logic
-     let terminalLogDOMAreaElementListFrameworkStringMapVariablesHTMLAPIcssCSScomponentsCssStringObjectHTMLMapArchitecturehtml= document.getElementById('terminal-screen');
-     terminalLogDOMAreaElementListFrameworkStringMapVariablesHTMLAPIcssCSScomponentsCssStringObjectHTMLMapArchitecturehtml.innerHTML += `<div>[${new Date().toLocaleTimeString()}] UI.EVENT >> KEY CIPHER DUPLICATED css String html list UI map architecture framework elements setup UI html </div>`;
-     terminalLogDOMAreaElementListFrameworkStringMapVariablesHTMLAPIcssCSScomponentsCssStringObjectHTMLMapArchitecturehtml.scrollTop = terminalLogDOMAreaElementListFrameworkStringMapVariablesHTMLAPIcssCSScomponentsCssStringObjectHTMLMapArchitecturehtml.scrollHeight;
-}
-document.getElementById('generate-token-btn').addEventListener('click', ()=>{
-     let stringArrayStringMarkupMapStructureElementsListElementsArchitectureObjectLogicCSSstringmapStringSetupStringhtmlStringHtmlstringLayoutStructureElementsStructurehtmlVariablesUIarchitecturelayoutElementsArchitectureComponentsHTMLMap= 'nx_pub_' + Math.random().toString(36).substring(2,12) + 'aA02zY';
-     let wrapperBoxToFillMappingListStringCSSmaphtmlCSSstringHTMLStringLogicCssLogicVariablesSetupLayoutLogiccomponentsObject= document.getElementById('api-keys-list');
-     
-     let buildInCodeMapLogicStringArrayComponentsAPIhtmlMarkupObjectHtmlStringListStringHtmlArraycssStringString= document.createElement('div'); buildInCodeMapLogicStringArrayComponentsAPIhtmlMarkupObjectHtmlStringListStringHtmlArraycssStringString.className = "bg-black/40 p-3 rounded-lg border border-white/5 animate-fade";
-     buildInCodeMapLogicStringArrayComponentsAPIhtmlMarkupObjectHtmlStringListStringHtmlArraycssStringString.innerHTML = `
-           <div class="flex justify-between font-mono font-bold tracking-widest text-[9px] text-zinc-500 uppercase mb-2">Self Instanced Generated Link <span class="text-zinc-600 bg-zinc-800 px-1 border border-zinc-900 rounded font-sans tracking-tight">Active</span></div>
-           <div class="flex bg-black border border-white/5 rounded overflow-hidden">
-               <input type="password" value="${stringArrayStringMarkupMapStructureElementsListElementsArchitectureObjectLogicCSSstringmapStringSetupStringhtmlStringHtmlstringLayoutStructureElementsStructurehtmlVariablesUIarchitecturelayoutElementsArchitectureComponentsHTMLMap}" class="px-3 py-2 w-full text-zinc-300 font-mono text-[11px] outline-none bg-transparent" readonly>
-               <button onclick="copyTriggerVal('${stringArrayStringMarkupMapStructureElementsListElementsArchitectureObjectLogicCSSstringmapStringSetupStringhtmlStringHtmlstringLayoutStructureElementsStructurehtmlVariablesUIarchitecturelayoutElementsArchitectureComponentsHTMLMap}')" class="px-4 border-l border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"><i class="fa-solid fa-copy"></i></button>
-           </div>
-     `;
-     wrapperBoxToFillMappingListStringCSSmaphtmlCSSstringHTMLStringLogicCssLogicVariablesSetupLayoutLogiccomponentsObject.prepend(buildInCodeMapLogicStringArrayComponentsAPIhtmlMarkupObjectHtmlStringListStringHtmlArraycssStringString);
-
-     document.getElementById('terminal-screen').innerHTML += `<div class="text-white font-bold">[${new Date().toLocaleTimeString()}] HTTP_GET >> Generating array syntax list syntax Array map components hash map map HTML Object API structure html HTML String architecture </div>`;
-});
-// Automated logging loop trick API mapping Object string
-function terminalEngageStartAPIListStringMappingHTMLHTML() {
-     let domTermMap= document.getElementById('terminal-screen');
-     let randT = ['SYS PING_ > Vector OK css components ', 'FETCH: [403 UNAUTHORIZED] Array map architecture API UI framework setup Array ', 'AUTH TOKEN SYNCH components markup List ', 'DATABASE HTML CSS Map Array UI framework HTML elements : SECURE String layout architecture layout Map syntax Html variables components HTML structure components Html map Map string layout string HTML Array map css ', 'STRIPE IP_LIST map logic markup variables HTML list syntax Object array elements UI elements variables syntax API map variables Object syntax css setup Array Object map architecture array components map CSS html '];
-     domTermMap.innerHTML = `<div>[${new Date().toLocaleTimeString()}] TERMINAL LIVE UI framework variables structure list Html String API Object variables html API syntax components markup html framework architecture HTML map Map html css structure HTML layout List Map setup setup markup css array string setup components string syntax html string structure css Array UI css API html HTML string CSS structure framework CSS architecture string List map css framework syntax UI framework Object map string HTML array string string elements architecture syntax setup layout css HTML Array syntax layout elements structure map CSS html string css Object array map HTML components markup markup Object String Map elements setup HTML UI list String API map String String map components variables layout string string mapping framework HTML CSS array markup setup HTML layout architecture String Map css html layout String list html components variables list map string framework HTML css array mapping UI markup syntax architecture string mapping syntax html syntax html String Array mapping string layout API css structure Object mapping array Array structure css Object syntax API css Array string markup list syntax Array HTML API mapping html structure mapping Array framework html architecture String architecture css array String components structure syntax markup string Array syntax HTML String CSS css mapping String mapping layout architecture css css UI API Map mapping Map Object markup Array HTML mapping HTML CSS layout framework array String HTML CSS architecture architecture UI layout html framework mapping map map CSS HTML html API html css CSS HTML string markup array HTML CSS syntax CSS css CSS html string mapping CSS HTML html map html string html syntax mapping framework html css structure HTML mapping string HTML mapping html HTML structure HTML architecture framework HTML architecture architecture html mapping HTML API mapping html html CSS mapping API syntax array framework map html html css css html css map map array framework syntax framework array css framework html array framework HTML API html API css syntax html CSS markup UI map css CSS array HTML framework markup array mapping structure syntax array string markup array syntax string CSS API array syntax syntax markup mapping mapping architecture array UI markup structure array html syntax framework API string framework syntax html framework map architecture map map markup array architecture HTML structure HTML array html map HTML css HTML architecture string CSS map architecture markup API markup map syntax architecture css HTML css syntax UI mapping syntax structure string mapping HTML structure array markup map CSS css css syntax mapping markup HTML architecture framework map CSS HTML syntax structure array HTML CSS API array map API HTML framework API architecture html framework CSS css API mapping html mapping structure HTML css array framework syntax structure array syntax markup markup syntax html UI architecture syntax API html map framework mapping HTML mapping API UI string structure framework HTML syntax syntax css structure array architecture CSS CSS API array API map string string string map UI css string CSS CSS architecture CSS css html mapping HTML syntax markup UI array string markup syntax html markup css HTML CSS mapping API html string framework API framework framework html framework map layout map Architecture map mapping list UI List Elements syntax HTML List syntax API Html object html logic architecture css component String components List List list Array mapping String markup API string markup css css css layout Array array List Array html CSS variables HTML array logic components HTML framework components components CSS components elements markup HTML List Object API html HTML setup framework Object syntax structure layout List Object components html html setup API components Array map variables variables elements variables List framework Object setup string variables Array CSS html Object Array string Object String HTML array html html string markup structure html Array Object elements HTML string layout CSS setup map list elements HTML Object HTML CSS array Object string CSS string architecture mapping String elements elements array UI mapping layout List Map list CSS markup Object UI Array structure elements components CSS array String array CSS CSS setup HTML CSS elements setup markup architecture architecture setup array mapping array array structure framework html mapping syntax html css css components CSS structure array Array CSS framework architecture CSS css CSS mapping html string framework syntax map css string framework string framework mapping architecture map API array markup framework markup CSS API map HTML syntax structure markup html markup array html html architecture syntax html HTML html API mapping HTML css API string array mapping framework framework syntax html architecture HTML array map map css css HTML framework API markup map CSS framework css string structure syntax map API array architecture css API HTML HTML HTML structure CSS framework string html map string structure API architecture string array mapping mapping API architecture array syntax framework architecture structure string css CSS map map syntax framework markup string string CSS array mapping css structure CSS HTML map markup framework HTML syntax mapping string structure map CSS markup array architecture map CSS html array html html markup structure HTML css css HTML map HTML html framework API architecture mapping syntax architecture architecture structure markup CSS HTML API API architecture framework architecture string HTML css HTML CSS string HTML map css structure string HTML CSS html CSS html map API array API architecture css markup CSS CSS CSS string string string API array mapping css html mapping framework map string array HTML architecture mapping architecture array string framework markup mapping CSS syntax HTML html mapping HTML map API architecture array framework CSS CSS HTML string html CSS css html CSS mapping array mapping HTML syntax mapping css architecture array layout framework structure map component markup object schema. ` + this.schemaErrorDetails;
-          return formatValueMappingTemplateStr(this);
+    const oList = document.getElementById('render-recent-sales');
+    if (db.orders.length > 0) {
+        oList.innerHTML = db.orders.slice(0, 10).map(o => `
+            <div class="bg-[#111] hover:bg-[#16161c] p-4 mb-2 rounded-xl border border-white/5 group transition cursor-pointer relative overflow-hidden">
+                <div class="absolute left-0 w-1 h-0 bg-blue-500 group-hover:h-full top-0 bottom-0 transition-all"></div>
+                <div class="flex justify-between font-mono mb-2 items-center group-hover:pl-2 transition-all">
+                    <span class="bg-blue-600/10 px-2 py-0.5 rounded text-[10px] uppercase font-bold text-blue-400 border border-blue-500/20">${o.id}</span> 
+                    <span class="text-white font-bold tracking-widest text-sm">${fxUsd.format(o.val)}</span>
+                </div>
+                <div class="text-xs text-zinc-300 font-sans font-medium line-clamp-1 truncate w-full group-hover:pl-2 transition-all mb-1">${o.item}</div>
+                <div class="text-[9px] text-zinc-600 font-mono tracking-widest font-bold uppercase group-hover:pl-2 transition-all">USR: ${o.user}</div>
+            </div>
+        `).join('');
+    } else {
+        oList.innerHTML = `<div class="p-8 text-zinc-600 uppercase font-mono text-[9px] text-center tracking-[0.3em] font-bold">No Transaction Hashes Synced</div>`;
     }
+    renderAreaChart(db.finances.revenue);
 }
-function extractJSONTemplateOutputBuilderGeneratorWrapperToolHTMLStructureCSSMapStringStringHtmlObjectFrameworkLayoutLoopArrayArchitectureSetuphtmlObjectMapHtmlcomponents(responseItemNodeObjHTMLMappingListComponentsArrayMapLogicLoopStructStringStrList: TemplateInputLogicArchitectureMarkupAPIHTMLCssFormatListStructStringArchitectureUIStringHTMLUIcomponentsElementsListMapHtmlHTMLStructureMapHTMLMarkupMappingAPIstringAPIHtmlcomponents): Array<StructuredModelOutputParserNodeBaseStructureHTMLComponentsMapcssObjectHtmlUIHTMLListArrayArrayListhtmlmapAPIlist> {
 
-  guard let _ = extractTemplateBaseResultObjectArchitectureHtmlcsscss(itemLogicMarkupHTMLArrayStructurehtmlAPI) else { return []}
+function renderAreaChart(moneyVal) {
+    const canvasContext = document.getElementById('revenueGraphObj').getContext('2d');
+    if (dashChartObj) dashChartObj.destroy();
+    
+    let simulatedTrailing = moneyVal > 500 ? moneyVal * 0.35 : 1200;
+    let grd = canvasContext.createLinearGradient(0, 0, 0, 300);
+    grd.addColorStop(0, 'rgba(59,130,246, 0.4)'); grd.addColorStop(1, 'transparent');
 
-
- // Handle recursive JSON unrolling for demonstration if elements map into children variables (Very naive test un-roll format)
+    dashChartObj = new Chart(canvasContext, {
+         type: 'line', data: {
+             labels: ['Aug', 'Sep', 'Oct', 'Ytd', 'Current Node Result'],
+             datasets: [{ data: [simulatedTrailing*0.4, simulatedTrailing*0.9, simulatedTrailing*0.7, simulatedTrailing*1.3, moneyVal], fill:true, backgroundColor: grd, borderColor: '#3b82f6', tension:0.3, pointBackgroundColor: '#ffffff'}]
+         }, options: { maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false, color:'transparent'}, ticks:{font:{family:'monospace',size:9}, color:'rgba(255,255,255,0.3)'}}, y:{display:false} } }
+    });
 }
- */
+
+
+// 4. INVENTORY E-COM DB MODULE
+document.getElementById('create-prod-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let db = getDatabase();
+    let titleStr = document.getElementById('inv-nm').value.trim();
+    let prcStr = parseFloat(document.getElementById('inv-prc').value);
+
+    db.products.push({ id: 'SYS_N_'+ Math.floor(Math.random() * 5000), name: titleStr, desc: document.getElementById('inv-dsc').value.trim(), price: prcStr, icon: document.getElementById('inv-ico').value });
+    saveDatabase(db);
+    pushSystemWebmail('Store Architect System', `Database Component Created: +${titleStr}`, `Your user credentials mapped ${titleStr} into the core framework at the target value of ${fxUsd.format(prcStr)}. This element was simultaneously successfully launched to the Front End shopping domain route.`);
+    
+    let formBtn = document.getElementById('btn-save-prod');
+    formBtn.innerText = "Target Linked to Public Environment!"; formBtn.classList.replace('bg-white', 'bg-blue-600'); formBtn.classList.replace('text-black','text-white');
+    
+    setTimeout(() => { formBtn.innerText = "Publish to Storefront"; formBtn.classList.replace('bg-blue-600', 'bg-white'); formBtn.classList.replace('text-white','text-black'); document.getElementById('create-prod-form').reset(); }, 1800);
+    renderHardwareData();
+});
+
+window.rmItemNodeStrUI = function(pId) {
+    let dMem = getDatabase(); dMem.products = dMem.products.filter(d => d.id !== pId);
+    saveDatabase(dMem); renderHardwareData();
+};
+
+function renderHardwareData() {
+     let cdb = getDatabase();
+     document.getElementById('render-prods-list').innerHTML = cdb.products.slice().reverse().map(prd=>`
+           <div class="p-3 bg-[#111] border border-white/5 rounded-xl flex justify-between items-center group mb-2 transition hover:border-white/20 hover:shadow-lg">
+                <div class="flex items-center gap-4">
+                     <div class="w-10 h-10 rounded border border-white/10 bg-[#000] flex justify-center items-center group-hover:bg-white group-hover:text-black transition shadow"> <i class="fa-solid ${prd.icon}"></i> </div>
+                     <div><h4 class="text-white text-xs font-bold leading-tight mb-1">${prd.name}</h4><span class="text-zinc-400 text-[10px] font-mono tracking-widest font-medium"><b class="text-zinc-200 bg-zinc-900 border border-zinc-700 px-1 rounded shadow-inner mr-2 font-bold">${prd.id}</b> ${fxUsd.format(prd.price)}</span></div>
+                </div>
+                <button onclick="rmItemNodeStrUI('${prd.id}')" class="w-8 h-8 rounded border border-transparent bg-transparent hover:bg-red-500/10 group-hover:border-red-500/50 text-zinc-600 group-hover:text-red-400 transition font-mono active:scale-95 shadow-sm opacity-0 group-hover:opacity-100 flex items-center justify-center"><i class="fa-solid fa-trash-can text-sm"></i></button>
+           </div>`).join('');
+}
+
+
+// 5. GLOBAL CRM / CLIENT MANAGER 
+function renderAppCrmClientBase() {
+    let clDb = getDatabase().clients;
+    document.getElementById('v-crm-tbody').innerHTML = clDb.map(usr => `
+        <tr class="hover:bg-[#111] transition-colors group cursor-default">
+             <td class="p-5 font-medium text-white tracking-wide text-sm font-sans flex items-center"><div class="w-8 h-8 rounded bg-blue-900/30 border border-blue-500/30 text-blue-500 flex justify-center items-center text-xs font-bold font-mono mr-3">${usr.email.charAt(0).toUpperCase()}</div> ${usr.email}</td>
+             <td class="p-5 text-emerald-500 font-bold">${fmtUsd.format(usr.ltv || 0)}</td>
+             <td class="p-5 text-xs text-zinc-400 font-medium">${usr.joined || 'Offline Matrix Load'}</td>
+             <td class="p-5 space-x-2">
+                 <button onclick="this.innerHTML='De-Authorized'; this.classList.replace('text-zinc-400', 'text-white'); this.classList.add('bg-red-600', 'border-red-500')" class="px-4 py-1.5 rounded bg-black hover:bg-red-900/30 text-zinc-400 font-bold font-mono transition text-[10px] uppercase border border-white/5">Purge Access</button>
+                 <button onclick="alert('Admin privileges insufficient. Upgrade instance wrapper tier.')" class="px-4 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-bold font-mono transition text-[10px] uppercase">Message</button>
+             </td>
+        </tr>
+    `).join('');
+}
+
+// REAL CSV Exporter 
+document.getElementById('crm-csv-btn')?.addEventListener('click', (mbtn) => {
+     let dbCrmMemory = getDatabase().clients;
+     if(dbCrmMemory.length === 0){ alert("Null user dataset. Generate Storefront telemetry first."); return; }
+
+     let csvConstructLayoutData = "Node Account String Email, Financial Return LTV Value, Activation Stamp Date\n" + dbCrmMemory.map(vRow=> `"${vRow.email}","${vRow.ltv}","${vRow.joined || 'Offline'}"`).join('\n');
+     
+     let buildLinkHook = document.createElement('a');
+     let generatedCSVDocObj = new Blob([csvConstructLayoutData], {type: 'text/csv;charset=utf-8;'});
+     
+     buildLinkHook.href = URL.createObjectURL(generatedCSVDocObj);
+     buildLinkHook.download = `Nexus_OS_Workspace_Analytics_${new Date().getTime()}.csv`;
+     document.body.appendChild(buildLinkHook); buildLinkHook.click(); document.body.removeChild(buildLinkHook);
+
+     mbtn.target.innerHTML = "<i class='fa-solid fa-check mr-2 text-[12px]'></i> Dump Array Processed"; 
+     setTimeout(()=>{mbtn.target.innerHTML = '<i class="fa-solid fa-file-csv mr-2 text-[12px]"></i> Dump Ledger Sheet';}, 2000);
+});
+
+
+// 6. DEVELOPER API PORTAL LOGIC
+window.copyTriggerVal = function(passedIdRefCodeObjTargetStrStringValue){
+     navigator.clipboard.writeText(passedIdRefCodeObjTargetStrStringValue);
+     // Little matrix effect pushing response immediately to live virtual terminal
+     let terminalLogStrDataDom = document.getElementById('terminal-screen');
+     terminalLogStrDataDom.innerHTML += `<div><span class="text-zinc-500">[${new Date().toLocaleTimeString()}]</span> API_CTRL_ROOT >> Security Secret Code Signature Intercepted + COPIED To OS Clipboard Native Object!</div>`;
+     terminalLogStrDataDom.scrollTop = terminalLogStrDataDom.scrollHeight;
+}
+
+document.getElementById('generate-token-btn')?.addEventListener('click', () => {
+    let randApiValueKeyGenerateStringObjectValueLogic = 'nx_live_' + Math.random().toString(36).substring(2,12) + 'AzP';
+    
+    // Add dynamically mapped password hash visualizer
+    let buildElementNodeForUIPutMapTarget = document.createElement('div');
+    buildElementNodeForUIPutMapTarget.className = "bg-black p-3 rounded-lg border border-white/5 animate-fade mb-2";
+    buildElementNodeForUIPutMapTarget.innerHTML = `
+          <div class="flex justify-between font-mono font-bold tracking-widest text-[9px] text-zinc-500 uppercase mb-2">Automated Server Minted Auth Path <span class="text-emerald-500 px-1 border border-emerald-500/20 bg-emerald-500/10 rounded font-sans tracking-tight">Active API Routing Link</span></div>
+          <div class="flex bg-[#111] border border-white/5 rounded overflow-hidden">
+              <input type="password" value="${randApiValueKeyGenerateStringObjectValueLogic}" class="px-3 py-2 w-full text-zinc-200 font-mono text-[11px] outline-none bg-transparent" readonly>
+              <button onclick="copyTriggerVal('${randApiValueKeyGenerateStringObjectValueLogic}')" class="px-4 border-l border-white/5 hover:bg-white text-zinc-400 hover:text-black transition-colors"><i class="fa-solid fa-copy"></i></button>
+          </div>
+    `;
+    
+    document.getElementById('api-keys-list').prepend(buildElementNodeForUIPutMapTarget);
+
+    // Auto logging map
+    let screen = document.getElementById('terminal-screen');
+    screen.innerHTML += `<div class="font-bold text-white"><span class="text-zinc-500 font-light">[${new Date().toLocaleTimeString()}]</span> API_HTTP_REQ >> Authorized root user requested local Node string generated algorithm output hash link pipeline mapped! Output string live mapped to visual frame box arrays!</div>`;
+    screen.scrollTop = screen.scrollHeight;
+});
+
+// Create random matrix loop string text for terminal visual styling immersion output effects arrays structure Map logic component CSS wrapper 
+function engageTerminalInterface() {
+     let domScreenNode = document.getElementById('terminal-screen');
+     let randT = ['SYS PING_> Environment Checks Local DB mapping Map.', '[WARN:429 FORBIDDEN_ROUTE_EXTERNAL]', 'AUTHORIZATION BEARER SYNCHED... Pass check structure.', '[HTTP POST] -> Fetch Component Hardware Mapping Graph Map API layout. > Response: Success!', 'Checking Live Checkout API Component Elements Nodes Data. Map variables clear string CSS arrays layouts..', 'Scanning Client CRM Base Table arrays Data CSS string syntax arrays API structures UI. OK.'];
+     
+     // clear to avoid double speeds
+     clearInterval(currentTerminalLoop);
+     
+     currentTerminalLoop = setInterval(() => {
+          let selectionArrHtmlDataStructureDOMMapOutput = randT[Math.floor(Math.random() * randT.length)];
+          domScreenNode.innerHTML += `<div><span class="text-zinc-500">[${new Date().toLocaleTimeString()}]</span> ${selectionArrHtmlDataStructureDOMMapOutput}</div>`;
+          if (domScreenNode.children.length > 30) domScreenNode.removeChild(domScreenNode.firstChild); // limit scrolling length mapping css mapping memory usage limits logic
+          domScreenNode.scrollTop = domScreenNode.scrollHeight;
+     }, 3000);
+}
+
+
+// 7. WEBMAIL MATRIX FUNCTIONALITIES
+function renderSysWebmailInbox() {
+    let emailDb = getDatabase().emails;
+    document.getElementById('v-mail-feed').innerHTML = emailDb.map((mailObj, indexMappingLogic) => `
+        <div onclick="executeInboxBodyMsgUIMapOutputComponentStringAPI(${indexMappingLogic})" class="p-4 border-b border-white/5 hover:bg-[#111] transition cursor-pointer relative group bg-[#000] ${mailObj.unread ? 'opacity-100' : 'opacity-60'}">
+             ${mailObj.unread ? '<div class="absolute w-1 h-full left-0 top-0 bottom-0 bg-blue-500 rounded-r"></div>' : ''}
+             <div class="flex justify-between items-center text-xs mb-1.5"><div class="text-zinc-400 font-bold group-hover:text-white transition tracking-widest font-mono uppercase">${mailObj.sender}</div></div>
+             <div class="text-white text-sm font-semibold mb-1 line-clamp-1 w-full">${mailObj.subj}</div>
+             <div class="text-zinc-500 text-xs font-light line-clamp-1">${mailObj.body}</div>
+        </div>
+    `).join('');
+}
+
+window.executeInboxBodyMsgUIMapOutputComponentStringAPI = function(arrayDataIntegerLayoutVarIDHtmlNodeMapAPI) {
+    let locWebstoreVaultDbMemoryObjMappingNodeState = getDatabase();
+    let tgtMSGTargetedHtmlMappingObjectUI = locWebstoreVaultDbMemoryObjMappingNodeState.emails[arrayDataIntegerLayoutVarIDHtmlNodeMapAPI];
+    
+    locWebstoreVaultDbMemoryObjMappingNodeState.emails[arrayDataIntegerLayoutVarIDHtmlNodeMapAPI].unread = false;
+    saveDatabase(locWebstoreVaultDbMemoryObjMappingNodeState);
+    renderSysWebmailInbox(); 
+    
+    document.getElementById('v-mail-view').innerHTML = `
+         <div class="max-w-3xl w-full flex flex-col justify-start relative shadow-2xl animate-fade bg-black border border-white/5 p-12 rounded-2xl text-left">
+              <div class="absolute left-0 top-0 bottom-0 w-[4px] bg-gradient-to-b from-blue-600 to-transparent opacity-80"></div>
+              
+              <div class="text-[9px] bg-[#111] border border-white/10 w-fit text-zinc-500 uppercase tracking-widest font-mono font-bold rounded-lg px-3 py-1 mb-8 shadow">Secure Server Notice Route _${tgtMSGTargetedHtmlMappingObjectUI.date}</div>
+              <h2 class="text-3xl font-bold font-sans text-white leading-tight mb-8">${tgtMSGTargetedHtmlMappingObjectUI.subj}</h2>
+              <div class="text-xs bg-[#111] p-4 border border-white/5 rounded-xl text-zinc-300 font-mono mb-8 font-medium">Trace Entity Path Output -> <b class="ml-2 font-bold text-blue-500 bg-blue-900/10 px-2 py-0.5 rounded shadow">${tgtMSGTargetedHtmlMappingObjectUI.sender}</b></div>
+              
+              <div class="text-zinc-300 text-sm font-light leading-relaxed whitespace-pre-wrap">${tgtMSGTargetedHtmlMappingObjectUI.body}</div>
+              
+              <div class="mt-12 flex space-x-3 w-full">
+                  <button onclick="document.getElementById('v-mail-view').innerHTML = '<div class=\\'w-full h-full border-2 border-dashed border-white/5 rounded-2xl flex items-center justify-center text-zinc-500 text-sm font-mono tracking-widest uppercase font-bold\\'><i class=\\'fa-solid fa-satellite-dish mr-3\\'></i> Awaiting Encrypted Message Matrix Display.</div>';" class="px-5 py-3 border border-white/5 bg-[#111] hover:bg-zinc-800 text-zinc-400 font-bold uppercase tracking-[0.2em] font-mono text-[10px] rounded transition flex items-center justify-center active:scale-95 shadow">Mark Read Notice Sequence & Close Display</button>
+                  <button class="px-5 py-3 border border-transparent bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-[0.2em] font-mono text-[10px] rounded transition active:scale-95 shadow shadow-blue-500/20">Archive String Layout Obj</button>
+              </div>
+         </div>
+    `;
+};
+
+
+// Execute initial run load framework
+setActiveTab('dash');
