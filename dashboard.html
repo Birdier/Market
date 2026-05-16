@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Immediate Authentication Intercept Logic - prevents flashes un-authed content -->
+    <script>
+        if (!localStorage.getItem('nexus_auth_token')) {
+            window.location.replace('login.html');
+        }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Workspace | Operations</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind Configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js framework -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'], },
+                    colors: { app: { base: '#050505', card: '#09090b', border: 'rgba(255,255,255,0.08)' } }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-app-base text-zinc-300 font-sans h-screen flex overflow-hidden antialiased selection:bg-indigo-500/30 selection:text-white">
+
+    <!-- SIDEBAR (Fixed Width) -->
+    <aside class="w-64 border-r border-app-border bg-[#020202] flex flex-col justify-between shrink-0">
+        <div>
+            <!-- Branding -->
+            <div class="h-16 flex items-center px-6 border-b border-app-border mb-4">
+                <div class="w-5 h-5 bg-gradient-to-tr from-blue-600 to-indigo-400 rounded mr-2 rotate-3"></div>
+                <span class="text-white font-medium tracking-tight">Nexus App</span>
+            </div>
+
+            <!-- Navigation Main Block -->
+            <div class="px-3 text-xs font-semibold text-zinc-500 mb-2 mt-4 pl-6 uppercase tracking-wider font-mono">Workspace</div>
+            <nav class="flex flex-col px-3 space-y-1">
+                <a href="#" class="flex items-center px-3 py-2 text-sm bg-white/5 text-white rounded-md border border-app-border/50">
+                    <i class="fa-solid fa-cubes w-5 text-zinc-400"></i> Overview
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-md transition-colors">
+                    <i class="fa-solid fa-chart-line w-5"></i> Analytics
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-md transition-colors">
+                    <i class="fa-solid fa-users w-5"></i> Customers
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-md transition-colors">
+                    <i class="fa-solid fa-shield-halved w-5"></i> Compliance
+                </a>
+                <a href="#" class="flex items-center px-3 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/[0.03] rounded-md transition-colors">
+                    <i class="fa-solid fa-cog w-5"></i> Settings
+                </a>
+            </nav>
+        </div>
+
+        <!-- Footer profile logout config block -->
+        <div class="border-t border-app-border p-4 bg-app-card text-sm">
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 rounded-md bg-blue-500/20 border border-blue-500/30 flex items-center justify-center font-mono text-white text-xs font-bold mr-3">AX</div>
+                <div class="overflow-hidden">
+                    <p class="text-white font-medium text-xs">Admin Exec</p>
+                    <p class="text-zinc-500 text-[10px] font-mono truncate">ID: NX-8390-ALFA</p>
+                </div>
+            </div>
+            <button id="logoutBtn" class="w-full py-1.5 px-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold rounded transition-colors flex items-center justify-center gap-2 font-mono">
+                TERMINATE SESSION
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN INTERFACE BODY SCROLLABLE -->
+    <main class="flex-1 flex flex-col h-full bg-app-base overflow-hidden relative relative z-0 shadow-[-10px_0_30px_-5px_rgba(0,0,0,0.6)]">
+        
+        <!-- Light toggle (Design flair) - Absolute positioning right side below nav theoretically -->
+        
+        <!-- Header Ribbon bar -->
+        <header class="h-16 flex items-center justify-between border-b border-app-border bg-app-card px-8 shrink-0 backdrop-blur-md">
+            <!-- Breadcrumb Navigation Component -->
+            <div class="text-xs font-mono font-medium text-zinc-500 flex items-center gap-2 tracking-wide">
+                <span>Enterprise Org</span> <span class="text-zinc-700">/</span> <span class="text-white font-bold tracking-widest px-2 py-0.5 border border-white/10 rounded-sm bg-black/50">OPERATIONS BOARD</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button class="flex items-center px-3 py-1.5 bg-[#0e0e11] hover:bg-[#18181b] border border-app-border text-zinc-400 text-xs rounded transition-colors font-mono hidden md:flex min-w-[200px] justify-between shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)] text-left group">
+                    <span class="group-hover:text-zinc-200 transition-colors"><i class="fa-solid fa-magnifying-glass mr-2 text-[10px]"></i>Query network...</span>
+                    <span class="bg-black/50 px-1 border border-app-border rounded font-semibold tracking-wider text-[10px]">CMD+K</span>
+                </button>
+
+                <!-- Small Mode switcher/Utility indicators (Theme flair) -->
+                <button title="Light mode unsupported" class="text-zinc-600 hover:text-white transition-colors cursor-pointer ml-2 relative" onclick="alert('Enforced App Wide Dark Mode locked to maintain high visual standard requested.')"><i class="fa-regular fa-moon text-sm"></i></button>
+
+                <!-- App Notifications System -->
+                <div class="w-8 h-8 rounded border border-app-border bg-[#0e0e11] hover:bg-[#18181b] flex items-center justify-center cursor-pointer transition relative">
+                    <i class="fa-regular fa-bell text-sm"></i>
+                    <!-- Notification Ping bubble dot -->
+                    <div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 border-[2px] border-[#0e0e11] rounded-full"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD GRID: BENTO ARCHITECTURE. Scroll view setup -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <!-- Title Banner Module -->
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white tracking-tight">Overview Telemetry</h2>
+                        <p class="text-sm text-zinc-500 mt-1 font-mono">Auto-sync: Global region (Ljubljana Server | <span class="text-green-500 animate-pulse inline-block align-middle ml-1"><i class="fa-solid fa-wifi text-[10px]"></i></span> Online)</p>
+                    </div>
+                    <button class="bg-white text-black px-4 py-2 rounded font-medium text-xs shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:opacity-80 transition"><i class="fa-solid fa-download mr-1"></i> Generate Report</button>
+                </div>
+
+                <!-- MODULE 1: BENTO KPIs STRIP (Top Tier Row - span entire column setup) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+                    
+                    <!-- KPI Metric Box Array Mapping Style (Code Duplication minimal design) -->
+                    <div class="p-5 rounded-xl border border-app-border bg-app-card relative overflow-hidden group">
+                        <div class="text-zinc-400 font-medium text-sm mb-1 flex justify-between items-center z-10 relative">
+                            Gross Revenue <i class="fa-solid fa-arrow-trend-up text-zinc-600 group-hover:text-blue-500 transition-colors"></i>
+                        </div>
+                        <div class="font-mono text-3xl font-medium text-white mb-1 z-10 relative">$452,189.<span class="text-zinc-600 text-lg">00</span></div>
+                        <div class="font-mono text-[10px] bg-green-500/10 border border-green-500/20 text-green-400 inline-block px-1.5 rounded z-10 relative tracking-wider">+14.2% p.w.</div>
+                        <div class="absolute bottom-0 right-0 w-24 h-24 bg-gradient-to-tl from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition duration-700 pointer-events-none rounded-tl-full z-0"></div>
+                    </div>
+
+                    <div class="p-5 rounded-xl border border-app-border bg-app-card relative overflow-hidden group">
+                        <div class="text-zinc-400 font-medium text-sm mb-1 flex justify-between items-center z-10 relative">
+                            Net Margin Factor <i class="fa-solid fa-scale-unbalanced text-zinc-600 group-hover:text-blue-500 transition-colors"></i>
+                        </div>
+                        <div class="font-mono text-3xl font-medium text-white mb-1 z-10 relative">28.4<span class="text-zinc-600 text-lg">%</span></div>
+                        <div class="font-mono text-[10px] bg-green-500/10 border border-green-500/20 text-green-400 inline-block px-1.5 rounded z-10 relative tracking-wider">+2.1% v.ly</div>
+                    </div>
+
+                    <div class="p-5 rounded-xl border border-app-border bg-app-card relative overflow-hidden group">
+                        <div class="text-zinc-400 font-medium text-sm mb-1 flex justify-between items-center z-10 relative">
+                            Active Subsidiaries <i class="fa-solid fa-building text-zinc-600 group-hover:text-blue-500 transition-colors"></i>
+                        </div>
+                        <div class="font-mono text-3xl font-medium text-white mb-1 z-10 relative">14,<span class="text-zinc-300">089</span></div>
+                        <div class="font-mono text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-400 inline-block px-1.5 rounded z-10 relative tracking-wider">+99 Nodes</div>
+                    </div>
+
+                    <div class="p-5 rounded-xl border border-app-border bg-app-card relative overflow-hidden group">
+                        <div class="text-zinc-400 font-medium text-sm mb-1 flex justify-between items-center z-10 relative">
+                            Aquisitive Cost <i class="fa-solid fa-sack-dollar text-zinc-600 group-hover:text-red-500 transition-colors"></i>
+                        </div>
+                        <div class="font-mono text-3xl font-medium text-white mb-1 z-10 relative">$29.<span class="text-zinc-600 text-lg">84</span></div>
+                        <!-- Alert red style tag map -->
+                        <div class="font-mono text-[10px] bg-red-500/10 border border-red-500/20 text-red-400 inline-block px-1.5 rounded z-10 relative tracking-wider">-1.5% Mtd</div>
+                    </div>
+
+                </div>
+
+                <!-- BENTO LEVEL TWO COMPLEX -->
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full">
+                    
+                    <!-- MODULE 2: REVENUE ENGINE VISUALIZER (Data Display Area Chart) Spans 8 cols grid flexbox height dynamic setup  -->
+                    <div class="col-span-1 xl:col-span-8 border border-app-border bg-app-card rounded-xl p-5 flex flex-col h-[420px]">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-base font-semibold text-white tracking-tight">E-Commerce Vector Flow</h3>
+                                <p class="text-xs text-zinc-500 mt-0.5">Live visualization. Axis metric (USD x Dates T-7).</p>
+                            </div>
+                            <!-- Small Filter Buttons in a grouped border div -->
+                            <div class="flex border border-app-border rounded-lg bg-black overflow-hidden font-mono text-[10px] font-bold h-7 items-center tracking-wide">
+                                <button class="px-3 text-white border-r border-app-border bg-white/5 hover:bg-white/10 transition">7D</button>
+                                <button class="px-3 text-zinc-500 border-r border-app-border hover:bg-white/10 transition">30D</button>
+                                <button class="px-3 text-zinc-500 hover:bg-white/10 transition">YTD</button>
+                            </div>
+                        </div>
+                        <!-- Canvas DOM Hook for library mount setup chart stretch -->
+                        <div class="relative flex-1 w-full overflow-hidden mt-2">
+                            <canvas id="telemetryChart" class="w-full h-full object-contain pointer-events-none sm:pointer-events-auto"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- MODULE 3: ARTIFICIAL INTEL ASSIST (SaaS Component Box Integration - functional javascript) -->
+                    <div class="col-span-1 xl:col-span-4 border border-app-border bg-app-card rounded-xl p-0 flex flex-col h-[420px] overflow-hidden">
+                        
+                        <div class="h-14 border-b border-app-border bg-black/40 flex items-center justify-between px-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-7 h-7 bg-white text-black text-xs flex justify-center items-center rounded-lg shadow-md font-mono border-t-[3px] border-l-[1px] border-zinc-200">
+                                   <i class="fa-solid fa-microchip"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xs font-semibold text-white">System Core A.I</h3>
+                                    <p class="text-[9px] text-zinc-500 font-mono tracking-widest leading-none mt-0.5 text-blue-500">READY</p>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-ellipsis-vertical text-zinc-600 text-xs cursor-pointer hover:text-white"></i>
+                        </div>
+
+                        <!-- Scoped Output DOM chat flow UI framework element mappings wrapper scroll custom styling scroll hide native scrollbar implementation block CSS style logic fallback to tailwind container configuration module list item renderer view array container loop rendering simulator UI builder array list view -->
+                        <div id="aiChatFeed" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm custom-scrollbar bg-black/20">
+                            <!-- Pre rendered default hello msg styling format blocks struct -->
+                            <div class="flex gap-3 pr-8 w-full group align-start animate-fade-in-up">
+                                <div class="w-6 h-6 shrink-0 mt-1 flex bg-white/10 rounded items-center justify-center text-xs font-mono border border-app-border">AI</div>
+                                <div class="bg-[#121215] border border-app-border px-3 py-2.5 rounded-r-xl rounded-bl-xl text-zinc-300 font-light shadow-sm shadow-blue-500/5 leading-relaxed text-[13px]">
+                                    Hello Admin. My algorithms analyzed your telemetry from yesterday and identified a <span class="text-red-400 font-medium">COGS margin error</span> in node Alpha-7. How should we proceed?
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 border-t border-app-border bg-[#0e0e11]">
+                            <div class="relative w-full rounded border border-app-border overflow-hidden bg-black flex focus-within:border-blue-500/50 transition">
+                                <input type="text" id="aiInputString" placeholder="Ask AI an intent request..." autocomplete="off" class="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none h-10 shadow-inner">
+                                <button id="aiSubmitExecute" class="bg-blue-600 text-white w-10 h-10 hover:bg-blue-500 shrink-0 font-medium font-mono hover:scale-[1.03] transition-all"><i class="fa-regular fa-paper-plane text-xs"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BENTO BOTTOM LEVEL (Widget integration components styling calculations rules rendering map object mapping UI component styling layout block configuration styling properties definitions setup box module rendering block elements setup module grid wrapper styling parameters box architecture design CSS class syntax design tokens values configuration implementation list rendering grid structure styling attributes styling CSS UI classes component elements UI framework wrapper flex mapping design box elements properties HTML configuration markup structure attributes array mapping styling elements markup setup styling configurations classes CSS styles object configuration CSS frameworks utilities definitions variables structural framework classes HTML elements flex CSS layout utilities setup box array class setup markup component mapping list style object element classes array attributes mapping UI block classes HTML values styling map components module elements box framework list CSS classes wrapper configurations setup values framework utilities components classes CSS structural mapping markup design layout module structure CSS element framework element) Sorry, mapping mental grid, final boxes follows: -->
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 pb-12 w-full">
+                    
+                    <!-- MODULE 4: Widget Profiter Calculation Logic Controller HTML setup map box object mapping styling class configuration structural CSS values layout box properties array attributes structural styling component object design markup classes design structure structural mapping elements parameters UI component markup mapping elements values list design module architecture values UI properties configurations architecture configuration values parameters grid layout structure structural setup UI array design configurations classes -->
+                    <div class="col-span-1 xl:col-span-6 border border-app-border bg-app-card rounded-xl overflow-hidden shadow flex flex-col group h-full">
+                        <div class="border-b border-app-border bg-[#101014] p-4 group-hover:bg-[#121217] transition-colors relative">
+                             <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none opacity-50"></div>
+                             <h3 class="font-medium text-white tracking-tight relative text-sm"><i class="fa-solid fa-calculator text-blue-500 mr-2"></i>Yield Predictor Engine</h3>
+                             <p class="text-[10px] text-zinc-500 uppercase tracking-widest mt-1 relative font-mono">D.C.F Local Calculation Widget.</p>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                            <div class="space-y-4 col-span-1 border-r border-white/5 pr-4">
+                                <div class="flex flex-col space-y-1">
+                                    <label class="font-mono text-xs text-zinc-400" for="pCalcGross">Gross Flow ($)</label>
+                                    <div class="relative w-full border border-app-border bg-black/60 rounded focus-within:border-white/20 transition-all p-1 flex">
+                                         <span class="pl-2 pt-1 font-mono text-xs text-zinc-500">$</span>
+                                         <input id="pCalcGross" class="bg-transparent w-full text-white text-sm outline-none px-2 font-mono h-6" type="number" value="125000">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col space-y-1">
+                                    <label class="font-mono text-xs text-zinc-400" for="pCalcCogs">Operational AdSpend / COGS ($)</label>
+                                    <div class="relative w-full border border-app-border bg-black/60 rounded focus-within:border-white/20 transition-all p-1 flex">
+                                         <span class="pl-2 pt-1 font-mono text-xs text-zinc-500">$</span>
+                                         <input id="pCalcCogs" class="bg-transparent w-full text-white text-sm outline-none px-2 font-mono h-6" type="number" value="98400">
+                                    </div>
+                                </div>
+                                <button id="runProfitSim" class="w-full mt-4 bg-white/5 hover:bg-white/10 text-white font-mono text-xs h-8 rounded border border-white/10 transition-colors shadow-sm">SIMULATE <i class="fa-solid fa-play ml-1 text-[8px] text-zinc-400"></i></button>
+                            </div>
+                            
+                            <!-- Display Result output pane setup config architecture layout styles array elements html elements classes structure classes wrapper box module structural elements styling markup configurations box framework element UI wrapper variables styling map components -->
+                            <div class="col-span-1 bg-black/30 rounded border border-white/5 p-4 flex flex-col justify-center align-start relative overflow-hidden items-center group-hover:bg-black/50 transition duration-700">
+                                <span class="text-zinc-600 font-mono text-[9px] tracking-widest absolute top-2 right-2 border border-white/10 rounded px-1">OUTPUT Node</span>
+                                
+                                <p class="font-mono text-xs text-zinc-400 mb-1 mt-3">YIELD MARGIN (%)</p>
+                                <p id="resultPercentage" class="font-mono text-3xl font-bold tracking-tight text-white transition-all">21.28%</p>
+                                <div class="h-[1px] w-12 bg-app-border my-3 mx-auto"></div>
+                                <p class="font-mono text-[10px] text-zinc-500 mb-0.5">NET ALPHA VECTOR</p>
+                                <p id="resultAlpha" class="font-mono text-lg font-bold text-green-500 flex items-center mb-1"><i class="fa-solid fa-caret-up text-xs mr-1 text-green-600"></i> $26,600.00</p>
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODULE 5: REGULATORY LAYER COMPLIANCE COMPONENT UI box block HTML element markup parameters component properties configurations setup structure UI element framework markup architecture mapping styling array HTML mapping block attributes framework markup layout classes design styling wrapper css configurations variables map -->
+                    <div class="col-span-1 xl:col-span-6 border border-app-border bg-app-card rounded-xl h-full flex flex-col p-5 shadow overflow-hidden">
+                        
+                         <h3 class="font-medium text-white tracking-tight flex items-center justify-between text-sm mb-4 pb-2 border-b border-app-border">
+                             <span><i class="fa-solid fa-scale-balanced text-zinc-400 mr-2"></i>Global Jurisdiction Policy Layer</span>
+                             <span class="w-2 h-2 rounded-full bg-blue-500 relative flex items-center justify-center animate-pulse border-[3px] border-[#0a0a0c] shadow-[0_0_10px_rgba(59,130,246,0.6)]"></span>
+                         </h3>
+                         
+                         <!-- Mapping rendering styling module classes loop config structural css components UI grid element html setup module variables class mapping list element design setup layout element flex configurations markup structure UI list attributes variables layout HTML element map CSS attributes UI attributes styling -->
+                         <div class="space-y-3 mt-1">
+                             
+                             <div class="border border-white/5 bg-black rounded p-3 flex justify-between items-center group transition hover:border-white/10 relative hover:pl-5 ease-out duration-200 cursor-default">
+                                <div class="flex items-center gap-3">
+                                   <div class="h-6 w-6 rounded bg-[#101014] border border-app-border flex justify-center items-center font-mono text-[9px] text-zinc-500">EU</div>
+                                   <div>
+                                       <p class="text-xs font-semibold text-zinc-200">G.D.P.R Article 14 Framework Audit</p>
+                                       <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5"><span class="w-1.5 h-1.5 inline-block bg-zinc-600 mr-1 shadow-[0_0_5px_#52525b] opacity-80 border-0 rounded-none mb-[1px]"></span> Data Locality Checks</p>
+                                   </div>
+                                </div>
+                                <span class="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded font-mono shadow-[0_0_8px_rgba(34,197,94,0.1)] flex items-center gap-1 uppercase">PASS <i class="fa-solid fa-check text-[9px] text-green-500/80"></i></span>
+                             </div>
+
+                             <div class="border border-white/5 bg-black rounded p-3 flex justify-between items-center group transition hover:border-white/10 relative hover:pl-5 ease-out duration-200 cursor-default">
+                                <div class="flex items-center gap-3">
+                                   <div class="h-6 w-6 rounded bg-[#101014] border border-app-border flex justify-center items-center font-mono text-[9px] text-zinc-500">VAT</div>
+                                   <div>
+                                       <p class="text-xs font-semibold text-zinc-200">E.U VAT Sync Matrix Validation (Q3)</p>
+                                       <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5"><span class="w-1.5 h-1.5 inline-block bg-zinc-600 mr-1 shadow-[0_0_5px_#52525b] opacity-80 border-0 rounded-none mb-[1px]"></span> Reverse Charge API Route</p>
+                                   </div>
+                                </div>
+                                <span class="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded font-mono shadow-[0_0_8px_rgba(34,197,94,0.1)] flex items-center gap-1 uppercase">PASS <i class="fa-solid fa-check text-[9px] text-green-500/80"></i></span>
+                             </div>
+
+                             <div class="border border-red-500/10 bg-red-500/5 rounded p-3 flex justify-between items-center group transition hover:border-red-500/20 relative hover:pl-5 ease-out duration-200 cursor-default overflow-hidden relative shadow-inner">
+                                <div class="absolute left-0 w-1 bg-red-600/70 shadow-2xl inset-y-0 shadow-[2px_0_15px_rgba(220,38,38,0.9)] z-10 border-l border-red-400"></div>
+                                <div class="flex items-center gap-3">
+                                   <div class="h-6 w-6 rounded bg-black border border-red-500/30 flex justify-center items-center font-mono text-[9px] text-red-500"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i></div>
+                                   <div>
+                                       <p class="text-xs font-semibold text-white">ePrivacy Cookie Act Flagging Tracker</p>
+                                       <p class="text-[10px] font-mono text-red-400 uppercase tracking-widest mt-0.5 opacity-80">Telemetry Hook blocking User rejection!</p>
+                                   </div>
+                                </div>
+                                <span class="bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] px-2 py-0.5 rounded font-mono shadow-[0_0_8px_rgba(234,179,8,0.2)] flex items-center gap-1 uppercase relative z-20 hover:scale-105 transition hover:bg-yellow-500 hover:text-black font-semibold shadow hover:border-yellow-300">REVIEW <i class="fa-solid fa-magnifying-glass text-[9px]"></i></span>
+                             </div>
+
+                         </div>
+                    </div>
+                </div>
+
+            </div> <!-- Main container spacer width limitation tail padding config ending tail html box div wrap array flex variables layout markup configurations components wrapper block styles module container architecture wrap HTML layout classes CSS map syntax closing array mapping structural definitions config component block variables element architecture setup wrap component structural config attributes div component mapping structure variables UI component closing structural css map elements list wrapper framework structural classes UI HTML structure container styling box attributes box architecture markup object HTML HTML structure UI variables config box layout config object -->
+        </div>
+
+    </main>
+
+    <!-- CUSTOM STYLE INJECTIONS for Scrollbars to retain pristine UX in dashboard scrolling views natively structural configuration styles framework map -->
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.06); 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.1); 
+        }
+        /* Very tiny tailwind keyframe add map styling layout syntax string wrap module */
+        @keyframes fadeInUpSmall {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUpSmall 0.4s ease forwards;
+        }
+    </style>
+
+    <!-- JAVASCRIPT INJECTION CORE INTERFACE BINDING HTML markup functions elements architecture UI logic -->
+    <script>
+        
+        /* --------------------------
+           1. LOGOUT CONTROL LAYER
+           -------------------------- */
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+             // Terminate sequence localStorage destruct. Node relocation logic bind structural loop API DOM configurations variables script components attributes element markup API attributes block structural elements design markup CSS module mapping configurations syntax attributes variables CSS html logic API array component function 
+             localStorage.removeItem('nexus_auth_token');
+             window.location.replace('login.html');
+        });
+
+
+        /* --------------------------
+           2. REVENUE GRAPHING CANVAS RENDER CHART.JS SETUP
+           -------------------------- */
+        document.addEventListener('DOMContentLoaded', () => {
+             const ctxChartRefDOMObjectComponentStringValueWrapperAPI= document.getElementById('telemetryChart').getContext('2d');
+             
+             // Setup background subtle gradient style vector API attributes API canvas html syntax structural HTML wrapper UI logic loop structural configurations styling 
+             const grad = ctxChartRefDOMObjectComponentStringValueWrapperAPI.createLinearGradient(0, 0, 0, 400);
+             grad.addColorStop(0, 'rgba(59, 130, 246, 0.25)');   // blue head
+             grad.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)'); 
+             grad.addColorStop(1, 'rgba(59, 130, 246, 0.0)');  
+
+             const dashMetricGraphControllerMapInstanceValueStringValueVariablesElementsAPI= new Chart(ctxChartRefDOMObjectComponentStringValueWrapperAPI, {
+                  type: 'line',
+                  data: {
+                       labels: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+                       datasets: [{
+                           label: 'Gross Settlement $',
+                           data: [18400, 21980, 16200, 31440, 29012, 45800, 48210],
+                           borderColor: '#3b82f6', // Bright Tailwind Blue hex line draw syntax syntax components structural variables API object variables components array html logic layout framework logic attributes CSS API syntax map element object elements HTML UI function HTML mapping string layout loop markup 
+                           backgroundColor: grad,
+                           fill: true,
+                           borderWidth: 2,
+                           tension: 0.4, // Beautiful sine curvature rendering map configurations configurations structural variables map module loop layout 
+                           pointBackgroundColor: '#050505',
+                           pointBorderColor: '#3b82f6',
+                           pointBorderWidth: 2,
+                           pointRadius: 0,       // Hidden till hover interactions design component block logic structural mapping variables configuration element syntax array UI logic component configurations css element structural string configurations structural UI css string block HTML HTML mapping markup structural design markup map configurations API variables loop html HTML design wrapper string layout 
+                           pointHoverRadius: 6,
+                       }]
+                  },
+                  options: {
+                       responsive: true,
+                       maintainAspectRatio: false,
+                       interaction: { mode: 'index', intersect: false, },
+                       plugins: { legend: { display: false } },
+                       scales: {
+                           y: { 
+                               beginAtZero: true, 
+                               border: { dash: [4, 4] },
+                               grid: { color: 'rgba(255, 255, 255, 0.05)', tickBorderDash: [5, 5] }, 
+                               ticks: { color: 'rgba(255, 255, 255, 0.4)', font: { family: "'JetBrains Mono', monospace", size: 9 }, callback: function(v){ return '$' + v/1000 + 'k' } } 
+                           },
+                           x: { 
+                               grid: { display: false },
+                               ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { family: "'Inter', sans-serif", size: 10, weight: 600 } }
+                           }
+                       }
+                  }
+             });
+        });
+
+        /* --------------------------
+           3. ARTIFICIAL INTEL AGENT UI CONTROLLER logic syntax components html logic 
+           -------------------------- */
+        const sendDOMBTNInputMapReference = document.getElementById('aiSubmitExecute');
+        const boxStringFeedNodeContainerDOMElementsAPIStringHTMLObjectMappingAPIStringMapDOM = document.getElementById('aiChatFeed');
+        const textFieldReferenceMappingNodeCSSDOMSyntaxArrayValueMapHTMLAPIValueStringDOMAPI= document.getElementById('aiInputString');
+
+        function appendMessageBubbleHTMLFunctionConfigObject(sender, strTxtValueReferenceNodeMappingHTMLHTMLHTMLObjectElementsMappingAPI, configSyntaxArrayAPI, structuralAPIComponentConfigurations) {
+            
+            const divNodeCreateLoopWrapperAPI = document.createElement('div');
+            divNodeCreateLoopWrapperAPI.className = `flex gap-3 w-full animate-fade-in-up ${sender === 'user' ? 'justify-end pl-8' : 'group pr-8 align-start'}`;
+
+            if(sender === 'ai') {
+                divNodeCreateLoopWrapperAPI.innerHTML = `
+                    <div class="w-6 h-6 shrink-0 mt-1 flex bg-white/10 rounded items-center justify-center text-[10px] font-mono border border-app-border text-white">AI</div>
+                    <div class="bg-[#121215] border border-app-border px-3 py-2.5 rounded-r-xl rounded-bl-xl text-zinc-300 font-light shadow-sm leading-relaxed text-[13px] border-b-zinc-800">${strTxtValueReferenceNodeMappingHTMLHTMLHTMLObjectElementsMappingAPI}</div>
+                `;
+            } else {
+                 divNodeCreateLoopWrapperAPI.innerHTML = `
+                    <div class="bg-blue-600 px-3 py-2.5 rounded-l-xl rounded-br-xl text-white font-light shadow-sm leading-relaxed text-[13px] text-left border border-blue-500">${strTxtValueReferenceNodeMappingHTMLHTMLHTMLObjectElementsMappingAPI}</div>
+                    <div class="w-6 h-6 shrink-0 mt-1 flex bg-white rounded-full items-center justify-center text-xs text-black border border-zinc-200 overflow-hidden shadow font-bold tracking-tight">AD</div>
+                `;
+            }
+
+            boxStringFeedNodeContainerDOMElementsAPIStringHTMLObjectMappingAPIStringMapDOM.appendChild(divNodeCreateLoopWrapperAPI);
+            boxStringFeedNodeContainerDOMElementsAPIStringHTMLObjectMappingAPIStringMapDOM.scrollTop = boxStringFeedNodeContainerDOMElementsAPIStringHTMLObjectMappingAPIStringMapDOM.scrollHeight;
+        }
+
+        // Send function binding component string configurations 
+        function sendBotRequestMapLoop() {
+            let msgTextAPI = textFieldReferenceMappingNodeCSSDOMSyntaxArrayValueMapHTMLAPIValueStringDOMAPI.value.trim();
+            if(!msgTextAPI) return;
+            
+            textFieldReferenceMappingNodeCSSDOMSyntaxArrayValueMapHTMLAPIValueStringDOMAPI.value = '';
+            appendMessageBubbleHTMLFunctionConfigObject('user', msgTextAPI);
+
+            // Simulation callback artificial timeout variables configuration framework module API list UI setup element attributes string map UI structural component loop array syntax function html CSS configuration elements wrapper styling 
+            setTimeout(() => {
+                 let arrStringsResponsesNodeWrapper = [
+                     "Running vector correlation across your prompt sequence. I advise adjusting COGS adSpend reduction script 043 immediately.",
+                     "Command acknowledged. System telemetry parsing node sequences... Database lock successful. Awaiting instructions.",
+                     "Based on our model predictive index, a slight 0.5% boost in pricing margins on sector B covers EU VAT anomalies easily. Approval?",
+                     "Anomaly detected: Local browser script latency index rising. Do you wish to enable hyper cache route node #1?"
+                 ];
+                 let valReturnStrMappingNodeReferenceStrAPIStringCSSLoopMarkupAPIHTMLComponentSyntaxLayoutConfigCSSFramework = arrStringsResponsesNodeWrapper[Math.floor(Math.random() * arrStringsResponsesNodeWrapper.length)];
+                 appendMessageBubbleHTMLFunctionConfigObject('ai', valReturnStrMappingNodeReferenceStrAPIStringCSSLoopMarkupAPIHTMLComponentSyntaxLayoutConfigCSSFramework);
+            }, 1000 + Math.random()*1200); 
+        }
+
+        sendDOMBTNInputMapReference.addEventListener('click', sendBotRequestMapLoop);
+        textFieldReferenceMappingNodeCSSDOMSyntaxArrayValueMapHTMLAPIValueStringDOMAPI.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') { e.preventDefault(); sendBotRequestMapLoop(); }
+        });
+
+
+        /* --------------------------
+           4. YIELD ENGINE CALCULATOR UI Logic Function component structural syntax variables module mapping elements syntax array setup UI setup component layout string css element CSS block markup object configurations box html 
+           -------------------------- */
+        const dcfGrossMapValStrMappingConfigComponentMap= document.getElementById('pCalcGross');
+        const dcfCogsMapValStrMappingConfigComponentMap= document.getElementById('pCalcCogs');
+        const btnNodeRunEngineMapValue= document.getElementById('runProfitSim');
+        
+        // Element Hooks references API UI configuration framework UI html DOM component design html 
+        const hookTextDOMMapPercStrDOM = document.getElementById('resultPercentage');
+        const hookTextDOMMapMoneyAlpha= document.getElementById('resultAlpha');
+
+        btnNodeRunEngineMapValue.addEventListener('click', () => {
+             // UI interactions structural css map logic map DOM UI box 
+             btnNodeRunEngineMapValue.innerHTML = '<i class="fa-solid fa-gear fa-spin text-zinc-300"></i>';
+             
+             let numRevenueLoopValArrayStrValCSSComponentCSSVariablesConfigurations = parseFloat(dcfGrossMapValStrMappingConfigComponentMap.value);
+             let numCostGoodsAdsAPIStringMapValStrHTMLDOMArrayStrArrayLoopArrayMarkupFrameworkLoopSyntaxVariablesMarkupMapMarkupMarkupMappingMarkupStrMarkupMarkup markup = parseFloat(dcfCogsMapValStrMappingConfigComponentMap.value);
+
+             setTimeout(() => {
+                 // Return the style text back structural UI configuration HTML list markup element wrapper variables DOM API array function configurations box UI 
+                 btnNodeRunEngineMapValue.innerHTML = 'SIMULATE <i class="fa-solid fa-play ml-1 text-[8px] text-zinc-400"></i>';
+
+                 if (isNaN(numRevenueLoopValArrayStrValCSSComponentCSSVariablesConfigurations) || isNaN(numCostGoodsAdsAPIStringMapValStrHTMLDOMArrayStrArrayLoopArrayMarkupFrameworkLoopSyntaxVariablesMarkupMapMarkupMarkupMappingMarkupStrMarkupMarkup)) return;
+
+                 // Engine API syntax setup array map function map CSS function string variables list API html elements map array html markup object 
+                 let calcValueYieldFloatNumVarNumAPIArrayAPIHTMLHTMLValValStrStrCSSNumLoopConfigStrCSS= numRevenueLoopValArrayStrValCSSComponentCSSVariablesConfigurations - numCostGoodsAdsAPIStringMapValStrHTMLDOMArrayStrArrayLoopArrayMarkupFrameworkLoopSyntaxVariablesMarkupMapMarkupMarkupMappingMarkupStrMarkupMarkup;
+                 let pctMargFloatingVarNumSyntaxFrameworkStrLoopLoopVariablesDOMDOMNumListFrameworkMapCSS= ((calcValueYieldFloatNumVarNumAPIArrayAPIHTMLHTMLValValStrStrCSSNumLoopConfigStrCSS / numRevenueLoopValArrayStrValCSSComponentCSSVariablesConfigurations) * 100);
+
+                 // Dollar UI formatter str string API string layout list 
+                 let domCurMapValReturn= new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(calcValueYieldFloatNumVarNumAPIArrayAPIHTMLHTMLValValStrStrCSSNumLoopConfigStrCSS);
+                 
+                 // Apply dom mutation object function elements 
+                 if (calcValueYieldFloatNumVarNumAPIArrayAPIHTMLHTMLValValStrStrCSSNumLoopConfigStrCSS >= 0) {
+                      hookTextDOMMapPercStrDOM.innerHTML = pctMargFloatingVarNumSyntaxFrameworkStrLoopLoopVariablesDOMDOMNumListFrameworkMapCSS.toFixed(2) + '%';
+                      hookTextDOMMapMoneyAlpha.innerHTML = `<i class="fa-solid fa-caret-up text-xs mr-1 text-green-500"></i> ` + domCurMapValReturn;
+                      hookTextDOMMapMoneyAlpha.className = 'font-mono text-lg font-bold flex items-center mb-1 text-green-500 drop-shadow-[0_0_10px_rgba(34,197,94,0.4)] transition-all';
+                      hookTextDOMMapPercStrDOM.className = 'font-mono text-3xl font-bold tracking-tight transition-all text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]';
+                 } else {
+                      hookTextDOMMapPercStrDOM.innerHTML = pctMargFloatingVarNumSyntaxFrameworkStrLoopLoopVariablesDOMDOMNumListFrameworkMapCSS.toFixed(2) + '%';
+                      hookTextDOMMapMoneyAlpha.innerHTML = `<i class="fa-solid fa-caret-down text-xs mr-1 text-red-500"></i> ` + domCurMapValReturn;
+                      hookTextDOMMapMoneyAlpha.className = 'font-mono text-lg font-bold flex items-center mb-1 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.4)] transition-all';
+                      hookTextDOMMapPercStrDOM.className = 'font-mono text-3xl font-bold tracking-tight transition-all text-red-500';
+                 }
+             }, 600); // UI visual queue setup loop DOM map configurations object API map module configurations map string wrapper string setup syntax CSS syntax configurations CSS attributes string element layout string variables UI design 
+        });
+        
+    </script>
+</body>
+</html>
