@@ -1,0 +1,56 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nexus | Auth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-black text-white font-sans min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Visual Backglow -->
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="w-[500px] h-[300px] bg-blue-600/20 blur-[100px] rounded-full"></div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="relative glass-panel rounded-2xl p-8 w-full max-w-[360px] animate-fade z-10 border border-white/10">
+        <div id="error-toast" class="hidden mb-4 p-3 bg-red-900/40 border border-red-500/50 text-red-400 font-mono text-[10px] uppercase font-bold tracking-widest rounded text-center">Invalid Hash Token</div>
+        
+        <i class="fa-solid fa-server text-3xl text-blue-500 mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"></i>
+        <h2 class="text-xl font-bold tracking-tight">Admin Initialization</h2>
+        <p class="text-[10px] text-zinc-500 uppercase font-mono tracking-widest mt-1 mb-8">E-commerce Protocol V2</p>
+
+        <form id="auth-form" class="space-y-4">
+            <div>
+                <input id="in-email" type="email" placeholder="admin@nexus.io" class="w-full bg-[#050505] border border-white/10 px-4 py-3 rounded-lg text-sm text-white font-mono focus:border-blue-500 outline-none transition" required>
+            </div>
+            <div>
+                <input id="in-key" type="password" placeholder="admin" class="w-full bg-[#050505] border border-white/10 px-4 py-3 rounded-lg text-sm text-white font-mono focus:border-blue-500 outline-none transition" required>
+            </div>
+            <button type="submit" id="submit-btn" class="w-full bg-white text-black hover:bg-zinc-300 transition-colors uppercase tracking-[0.2em] font-mono font-bold text-[11px] py-3 rounded-lg mt-2">
+                Connect Routing
+            </button>
+        </form>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script>
+        document.getElementById('auth-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            
+            if (document.getElementById('in-email').value === 'admin@nexus.io' && document.getElementById('in-key').value === 'admin') {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Unlocking Database';
+                localStorage.setItem('auth_session', 'admin_access');
+                setTimeout(() => window.location.href = 'admin.html', 800);
+            } else {
+                document.getElementById('error-toast').classList.remove('hidden');
+                setTimeout(() => document.getElementById('error-toast').classList.add('hidden'), 2000);
+            }
+        });
+    </script>
+</body>
+</html>
