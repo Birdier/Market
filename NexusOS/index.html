@@ -3,85 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus | Hardware Procurement</title>
+    <title>Nexus | Premium Infrastructure</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Link the central stylesheet -->
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter'], mono: ['JetBrains Mono'] }, colors: { app: { bg: '#000000', surface: '#050505', box: '#0a0a0d', border: 'rgba(255,255,255,0.08)' } } } } }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }, colors: { app: { bg: '#000000', surface: '#050505', box: '#0a0a0d', border: 'rgba(255,255,255,0.08)' } } } } }
     </script>
 </head>
 <body class="bg-app-bg text-zinc-300 font-sans min-h-screen flex flex-col overflow-x-hidden selection:bg-blue-500/30">
 
-    <!-- Store Navigation -->
-    <nav class="fixed top-0 w-full glass-panel z-50 border-b border-white/10 h-16 flex items-center justify-between px-6">
-        <div class="text-white font-bold tracking-tight text-lg">
-            <i class="fa-solid fa-cube text-blue-500 mr-2 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"></i> Nexus Market
+    <!-- E-Commerce Navigation -->
+    <nav class="fixed top-0 w-full glass-panel z-50 border-b border-white/5 h-[70px] flex items-center justify-between px-6 transition-all">
+        <div class="flex items-center space-x-12">
+            <div class="text-white font-bold tracking-tight text-lg flex items-center cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex justify-center items-center mr-3 shadow-lg"><i class="fa-solid fa-cube text-white text-sm"></i></div>
+                Nexus
+            </div>
+            <div class="hidden md:flex items-center space-x-6 text-sm font-medium text-zinc-400">
+                <a href="#" class="hover:text-white transition">Products</a>
+                <a href="#" class="hover:text-white transition">Solutions</a>
+                <a href="#" class="hover:text-white transition">Documentation</a>
+            </div>
         </div>
         
         <div class="flex items-center space-x-6">
-            <button onclick="document.getElementById('cartDrawer').classList.toggle('translate-x-full')" class="text-zinc-400 hover:text-white font-mono text-xs font-bold tracking-widest uppercase transition relative group">
-                <i class="fa-solid fa-cart-shopping mr-2 text-zinc-500 group-hover:text-blue-500 transition-colors"></i> Cart 
-                <span id="ui-cart-count" class="absolute -top-3 -right-3 bg-blue-600 text-white w-4 h-4 rounded-full flex justify-center items-center text-[8px] hidden shadow-lg">0</span>
+            <button onclick="toggleCart()" class="text-sm font-medium text-zinc-300 hover:text-white transition relative flex items-center group">
+                <div class="w-9 h-9 rounded-full bg-white/5 group-hover:bg-white/10 flex justify-center items-center mr-2 border border-white/5"><i class="fa-solid fa-shopping-bag"></i></div>
+                Cart 
+                <span id="ui-cart-count" class="absolute top-0 right-10 transform translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white w-[18px] h-[18px] rounded-full flex justify-center items-center text-[10px] hidden font-bold shadow-md">0</span>
             </button>
-            <div class="h-4 w-px bg-white/20"></div>
-            <a href="login.html" class="bg-white/10 hover:bg-white text-zinc-300 hover:text-black transition border border-white/10 px-4 py-2 rounded text-[10px] uppercase font-mono font-bold tracking-widest shadow">
-                Admin OS Link
+            <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+            <a href="login.html" class="hidden md:flex bg-white text-black hover:bg-zinc-200 transition font-semibold px-4 py-2 rounded-lg text-sm shadow">
+                Sign In <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
             </a>
         </div>
     </nav>
 
     <!-- Side Shopping Cart -->
-    <div id="cartDrawer" class="fixed right-0 top-0 bottom-0 w-[400px] bg-black border-l border-white/10 z-[60] translate-x-full transition-transform duration-300 shadow-[-20px_0_40px_rgba(0,0,0,0.8)] flex flex-col">
-        <div class="h-16 px-6 bg-[#030303] border-b border-white/10 flex justify-between items-center shrink-0">
-             <h3 class="text-white font-mono text-[11px] font-bold uppercase tracking-[0.2em]"><i class="fa-solid fa-layer-group text-blue-500 mr-2"></i> Current Session Hash</h3>
-             <button onclick="document.getElementById('cartDrawer').classList.toggle('translate-x-full')" class="text-zinc-600 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="cartDrawer" class="fixed right-0 top-0 bottom-0 w-full md:w-[450px] glass-panel border-l border-white/10 z-[60] translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+        <div class="h-[70px] px-6 border-b border-white/10 flex justify-between items-center shrink-0">
+             <h3 class="text-white text-lg font-bold">Shopping Cart</h3>
+             <button onclick="toggleCart()" class="text-zinc-500 hover:text-white w-8 h-8 flex justify-center items-center rounded-full hover:bg-white/10 transition"><i class="fa-solid fa-xmark"></i></button>
         </div>
         
-        <div id="ui-cart-list" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-3">
-             <!-- Generated Items live here -->
+        <div id="ui-cart-list" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-black/40">
+             <!-- Javascript items injected here -->
         </div>
 
-        <div class="p-6 bg-[#030303] border-t border-white/5 shrink-0">
-             <div class="flex justify-between items-baseline mb-6 font-mono">
-                 <span class="text-zinc-500 text-[10px] tracking-widest uppercase font-bold">Sum Flow Total</span>
-                 <span id="ui-cart-total" class="text-white text-3xl font-bold tracking-tighter drop-shadow">$0.00</span>
+        <div class="p-6 bg-app-box border-t border-white/5 shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+             <div class="flex justify-between items-end mb-4">
+                 <span class="text-zinc-400 font-medium">Subtotal</span>
+                 <span id="ui-cart-total" class="text-white text-2xl font-bold tracking-tight">$0.00</span>
              </div>
-             <button id="checkout-btn" onclick="executeCheckout()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-mono text-[10px] font-bold tracking-[0.2em] uppercase py-3 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.25)] transition active:scale-95 disabled:opacity-40" disabled>
-                 Initialize Payment Handshake
+             <p class="text-xs text-zinc-500 mb-6 font-light">Taxes and shipping calculated at checkout.</p>
+             <button id="checkout-btn" onclick="executeCheckout()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-4 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                 Proceed to Checkout
              </button>
         </div>
     </div>
 
-    <!-- Store Front Content -->
-    <main class="flex-1 mt-32 px-6 max-w-7xl mx-auto w-full relative z-10 pb-20">
+    <!-- Home Page Content -->
+    <main class="flex-1 pt-36 px-6 max-w-7xl mx-auto w-full relative z-10 pb-24">
         
-        <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/10 blur-[100px] pointer-events-none -z-10 rounded-full"></div>
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-blue-600/10 to-transparent blur-[80px] pointer-events-none -z-10 rounded-full"></div>
 
-        <header class="mb-12 border-b border-app-border pb-12">
-             <h1 class="text-5xl lg:text-7xl text-white font-bold tracking-tighter mb-6 leading-none">Modular server systems,<br>delivered instantly.</h1>
-             <p class="text-zinc-500 font-mono text-sm max-w-2xl leading-relaxed">Shop the Nexus inventory array below. Adding hardware modules and confirming a test settlement securely feeds live telemetry to your modular E-OS database infrastructure immediately.</p>
+        <header class="mb-16 flex flex-col items-center text-center">
+             <div class="mb-6 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur inline-flex items-center text-xs font-medium text-zinc-300">
+                <span class="flex h-2 w-2 relative mr-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
+                Enterprise Infrastructure. V2 Now Available.
+             </div>
+             <h1 class="text-5xl md:text-7xl text-white font-bold tracking-tighter mb-6 leading-tight max-w-4xl text-balance">
+                Scale your processing.<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Without the bottlenecks.</span>
+             </h1>
+             <p class="text-zinc-400 text-lg md:text-xl font-light max-w-2xl leading-relaxed text-balance">Acquire enterprise-grade networking and computing hardware. Orders are processed natively into your workspace portal with unified real-time billing.</p>
         </header>
         
-        <!-- Live Market Layout -->
-        <div class="flex items-center mb-6">
-            <div class="w-2 h-2 rounded-full bg-emerald-500 mr-3 animate-pulse shadow-[0_0_8px_#10b981]"></div>
-            <span class="font-mono text-xs uppercase font-bold tracking-widest text-white">Live Node Pipeline <span class="text-emerald-500 bg-emerald-500/10 px-1 border border-emerald-500/20 ml-2 rounded font-sans text-[10px] tracking-normal shadow">Operational</span></span>
+        <div class="flex items-center justify-between mb-8 border-b border-white/5 pb-4 mt-12">
+            <h2 class="text-2xl font-semibold text-white">Current Hardware Inventory</h2>
         </div>
 
-        <div id="storefront-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade">
+        <div id="storefront-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
              <!-- Inventory items pulled natively from db.js script render here -->
         </div>
-
     </main>
-
-    <footer class="border-t border-app-border py-8 text-center text-zinc-700 font-mono text-[10px] tracking-widest uppercase">
-        Nexus OS Environment
-    </footer>
 
     <!-- Connect our central Brain module -->
     <script src="js/db.js"></script>
@@ -91,123 +99,114 @@
 
         function initStore() {
             let dbStoreData = getDatabase();
-            let storeContainerGrid = document.getElementById('storefront-grid');
+            let storeGrid = document.getElementById('storefront-grid');
 
             if(dbStoreData.products.length === 0){
-                storeContainerGrid.innerHTML = `<div class="col-span-full py-20 text-center font-mono font-bold tracking-widest text-zinc-600 uppercase text-xs">NO PRODUCTS FOUND. OPEN ADMIN OS TO SYNC CATALOG INVENTORY.</div>`;
+                storeGrid.innerHTML = `<div class="col-span-full py-16 bg-[#111] rounded-2xl border border-dashed border-white/10 text-center font-medium text-zinc-500">The product catalog is currently empty. Login to the admin workspace to add items.</div>`;
                 return;
             }
 
-            storeContainerGrid.innerHTML = dbStoreData.products.slice().reverse().map(prObj => `
-                <div class="bg-[#0a0a0d] border border-white/5 hover:border-blue-500/30 rounded-2xl overflow-hidden transition shadow-lg group flex flex-col hover:shadow-[0_15px_30px_rgba(0,0,0,0.5)]">
-                    <div class="h-40 bg-[#030303] flex justify-center items-center group-hover:bg-[#111] transition-all relative overflow-hidden">
-                        <i class="fa-solid ${prObj.icon || 'fa-box'} text-6xl text-white/5 group-hover:text-blue-500/20 transition-all duration-700 group-hover:scale-125"></i>
+            storeGrid.innerHTML = dbStoreData.products.slice().reverse().map(prod => `
+                <div class="bg-app-box border border-white/10 hover:border-white/20 rounded-2xl overflow-hidden transition-all shadow-lg hover:shadow-2xl hover:shadow-black group flex flex-col hover:-translate-y-1 cursor-default">
+                    <div class="h-[220px] bg-[#050505] flex justify-center items-center relative">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0d] opacity-50"></div>
+                        <i class="fa-solid ${prod.icon || 'fa-server'} text-[70px] text-zinc-800 group-hover:text-zinc-600 transition-colors duration-500 z-10 drop-shadow-xl"></i>
                     </div>
-                    <div class="p-6 flex-1 flex flex-col">
-                        <h3 class="text-white font-bold text-lg leading-tight mb-2">${prObj.name}</h3>
-                        <p class="text-zinc-500 text-[11px] font-mono leading-relaxed line-clamp-2 h-8 mb-4">${prObj.desc}</p>
+                    <div class="p-6 flex-1 flex flex-col z-10 bg-app-box border-t border-white/5">
+                        <div class="flex justify-between items-start mb-2">
+                             <h3 class="text-white font-semibold text-lg leading-snug">${prod.name}</h3>
+                             <span class="bg-zinc-800 text-zinc-300 text-[10px] font-mono px-2 py-0.5 rounded font-bold">IN STOCK</span>
+                        </div>
+                        <p class="text-zinc-400 text-sm font-light leading-relaxed line-clamp-2 h-10 mb-6">${prod.desc}</p>
                         
-                        <div class="mt-auto border-t border-white/5 pt-4 flex justify-between items-center">
-                            <span class="font-mono text-white font-bold text-xl drop-shadow">${currencyFormatter.format(prObj.price)}</span>
-                            <button onclick="addToLocalCart('${prObj.id}', '${prObj.name.replace(/'/g, "\\'")}', ${prObj.price})" class="px-4 py-2 bg-[#111] hover:bg-white text-zinc-400 hover:text-black font-mono text-[10px] font-bold tracking-widest uppercase transition rounded-md border border-white/10 hover:border-white hover:shadow-lg active:scale-95">Add_ <i class="fa-solid fa-plus ml-1 opacity-50"></i></button>
+                        <div class="mt-auto flex justify-between items-center pt-2">
+                            <span class="text-white font-medium text-xl">${fmtUsd.format(prod.price)}</span>
+                            <button onclick="addToLocalCart('${prod.id}', '${prod.name.replace(/'/g, "\\'")}', ${prod.price})" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition rounded-xl active:scale-95 shadow-lg shadow-blue-500/20">Add to Cart</button>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Logic mapping functionality 
+        window.toggleCart = function() {
+            document.getElementById('cartDrawer').classList.toggle('translate-x-full');
+        };
+
         window.addToLocalCart = function(productUUID, productTitelNode, numPrcTarget) {
             sessionCartArray.push({ id: productUUID, name: productTitelNode, price: numPrcTarget });
             refreshCartRendererUI();
             document.getElementById('cartDrawer').classList.remove('translate-x-full');
         };
 
-        window.removeSpecificItemMapLogicUI = function(indexedDataArrIntLoc) {
+        window.removeSpecificItem = function(indexedDataArrIntLoc) {
             sessionCartArray.splice(indexedDataArrIntLoc, 1);
             refreshCartRendererUI();
         };
 
         function refreshCartRendererUI() {
-            let DOMListFrameBoxMap = document.getElementById('ui-cart-list');
-            let moneyTotalOutputDOMStringUI = document.getElementById('ui-cart-total');
-            let buttonSecurityAPIValStr = document.getElementById('checkout-btn');
-            let floatingCountVisualVarCSSMap = document.getElementById('ui-cart-count');
+            let listHTML = document.getElementById('ui-cart-list');
+            let txtTotal = document.getElementById('ui-cart-total');
+            let btnCheck = document.getElementById('checkout-btn');
+            let badgeObj = document.getElementById('ui-cart-count');
 
             if (sessionCartArray.length === 0) {
-                DOMListFrameBoxMap.innerHTML = '<div class="text-zinc-700 font-mono text-center font-bold tracking-[0.2em] mt-16 text-[9px] uppercase"><i class="fa-solid fa-boxes-stacked block mb-4 text-2xl"></i> Queue Frame Empty</div>';
-                moneyTotalOutputDOMStringUI.innerText = '$0.00';
-                buttonSecurityAPIValStr.disabled = true;
-                floatingCountVisualVarCSSMap.classList.add('hidden');
+                listHTML.innerHTML = '<div class="h-full flex flex-col justify-center items-center text-zinc-500 opacity-80"><i class="fa-solid fa-shopping-basket text-4xl mb-3"></i><p class="text-sm font-medium">Your cart is currently empty.</p></div>';
+                txtTotal.innerText = '$0.00';
+                btnCheck.disabled = true;
+                badgeObj.classList.add('hidden');
                 return;
             }
 
-            floatingCountVisualVarCSSMap.classList.remove('hidden'); 
-            floatingCountVisualVarCSSMap.innerText = sessionCartArray.length;
-            buttonSecurityAPIValStr.disabled = false;
+            badgeObj.classList.remove('hidden'); 
+            badgeObj.innerText = sessionCartArray.length;
+            btnCheck.disabled = false;
             
-            let numMoneyCurrentLivePipelineFlowValueTargetObjMapStrFloatAPIUI = 0;
+            let accumulatedValue = 0;
             
-            DOMListFrameBoxMap.innerHTML = sessionCartArray.map((itXUIvarObjNodeDataComponentsMapAPI, intXNumPosIndexDOMArrVarLoopMapping) => {
-                numMoneyCurrentLivePipelineFlowValueTargetObjMapStrFloatAPIUI += itXUIvarObjNodeDataComponentsMapAPI.price;
+            listHTML.innerHTML = sessionCartArray.map((cartItem, idx) => {
+                accumulatedValue += cartItem.price;
                 return `
-                <div class="p-3 bg-[#111] border border-white/5 rounded-lg flex justify-between items-center group font-mono relative overflow-hidden transition hover:border-white/20">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600/50 opacity-0 group-hover:opacity-100 transition"></div>
-                    <div class="group-hover:pl-2 transition-all w-[80%]">
-                        <div class="text-zinc-300 font-bold text-[10px] uppercase mb-1 truncate">${itXUIvarObjNodeDataComponentsMapAPI.name}</div>
-                        <div class="text-blue-400 font-bold text-xs">${currencyFormatter.format(itXUIvarObjNodeDataComponentsMapAPI.price)}</div>
+                <div class="p-4 bg-app-box border border-white/5 rounded-xl flex justify-between items-center group relative overflow-hidden transition-all shadow-sm">
+                    <div class="w-[85%] pr-2">
+                        <div class="text-zinc-200 font-medium text-sm leading-tight mb-1 truncate">${cartItem.name}</div>
+                        <div class="text-zinc-500 text-xs font-light">${fmtUsd.format(cartItem.price)}</div>
                     </div>
-                    <button onclick="removeSpecificItemMapLogicUI(${intXNumPosIndexDOMArrVarLoopMapping})" class="h-8 w-8 text-zinc-500 hover:bg-red-600/10 hover:border-red-500 hover:text-red-400 border border-transparent rounded text-[10px] flex justify-center items-center transition shrink-0"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="removeSpecificItem(${idx})" class="w-8 h-8 rounded-full bg-[#111] border border-white/5 text-zinc-500 hover:text-white hover:bg-zinc-800 transition flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark text-sm"></i></button>
                 </div>
                 `;
             }).join('');
             
-            moneyTotalOutputDOMStringUI.innerText = currencyFormatter.format(numMoneyCurrentLivePipelineFlowValueTargetObjMapStrFloatAPIUI);
+            txtTotal.innerText = fmtUsd.format(accumulatedValue);
         }
 
-        function executeCheckout() {
-            let systemPaymentDOMTriggerElementButtonValCSSUIObject = document.getElementById('checkout-btn');
-            systemPaymentDOMTriggerElementButtonValCSSUIObject.innerText = "Encrypting Settlement..."; 
-            systemPaymentDOMTriggerElementButtonValCSSUIObject.disabled = true;
+        window.executeCheckout = function() {
+            let checkoutBtn = document.getElementById('checkout-btn');
+            checkoutBtn.innerText = "Processing..."; 
+            checkoutBtn.classList.add('opacity-80', 'cursor-not-allowed');
 
             setTimeout(() => {
-                // Here we fetch the Vault specifically mapped from 'db.js' script inclusion!
-                let currentNexusStorageBaseRoot = getDatabase();
-                let accumulatedCheckMoneyPipelineStringSumObjFloat = 0;
-                let descriptionBuilderForDBStoreListAPIStringsLayoutVar = [];
-                
-                sessionCartArray.forEach(purchVarLoopIndexStrArrComponentsItemsValObj => { 
-                     accumulatedCheckMoneyPipelineStringSumObjFloat += purchVarLoopIndexStrArrComponentsItemsValObj.price; 
-                     descriptionBuilderForDBStoreListAPIStringsLayoutVar.push(purchVarLoopIndexStrArrComponentsItemsValObj.name); 
-                });
+                let accumulatedPrice = 0;
+                sessionCartArray.forEach(purch => accumulatedPrice += purch.price);
 
-                currentNexusStorageBaseRoot.financials.revenue += accumulatedCheckMoneyPipelineStringSumObjFloat;
-                currentNexusStorageBaseRoot.orders.unshift({
-                    id: 'REC_' + Math.floor(Math.random() * 88888),
-                    val: accumulatedCheckMoneyPipelineStringSumObjFloat,
-                    item: descriptionBuilderForDBStoreListAPIStringsLayoutVar.join(' | '),
-                    user: 'sys_client' + Math.floor(Math.random() * 900) + '@protocol.net',
-                });
-
-                // Commit back to DB engine isolated architecture!
-                saveDatabase(currentNexusStorageBaseRoot);
+                // Run the newly integrated db.js specific checkout global hook!
+                globalProcessCheckoutEvent(sessionCartArray, accumulatedPrice);
                 
-                systemPaymentDOMTriggerElementButtonValCSSUIObject.classList.add('bg-green-600', 'text-white', 'border-transparent'); 
-                systemPaymentDOMTriggerElementButtonValCSSUIObject.innerText = "Payment Accepted";
+                checkoutBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'opacity-80', 'cursor-not-allowed');
+                checkoutBtn.classList.add('bg-green-500', 'text-white', 'pointer-events-none'); 
+                checkoutBtn.innerHTML = "<i class='fa-solid fa-check-circle mr-2'></i> Order Completed Successfully";
                 
                 setTimeout(() => {
                     sessionCartArray = []; refreshCartRendererUI(); 
                     document.getElementById('cartDrawer').classList.add('translate-x-full');
-                    systemPaymentDOMTriggerElementButtonValCSSUIObject.classList.remove('bg-green-600', 'text-white', 'border-transparent'); 
-                    systemPaymentDOMTriggerElementButtonValCSSUIObject.innerText = "Initialize Payment Handshake";
-                }, 1800);
+                    checkoutBtn.classList.remove('bg-green-500', 'pointer-events-none'); 
+                    checkoutBtn.classList.add('bg-blue-600', 'hover:bg-blue-500'); 
+                    checkoutBtn.innerText = "Proceed to Checkout";
+                }, 2000);
 
-            }, 1200);
+            }, 1000);
         }
 
-        // Kick off load engine structure html rendering framework pipeline mappings
         initStore();
-
     </script>
 </body>
 </html>
