@@ -3,128 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus | Intelligent Telemetry</title>
-    <!-- Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Nexus Hardware | Premium E-Commerce</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tailwind Configuration -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        app: {
-                            base: '#09090b',
-                            card: 'rgba(255,255,255,0.02)',
-                            border: 'rgba(255,255,255,0.08)',
-                            primary: '#3b82f6', // Tailwind blue-500
-                        }
-                    }
-                }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter'], mono: ['JetBrains Mono'] }, colors: { app: { base: '#000000', card: '#09090b', border: 'rgba(255,255,255,0.08)' } } } } }
+
+        // CORE DB ENGINE: Bootstraps the platform if it doesn't exist yet
+        function initStoreDB() {
+            if (!localStorage.getItem('NEXUS_ECOM_DB')) {
+                localStorage.setItem('NEXUS_ECOM_DB', JSON.stringify({
+                    revenue: 25800.00, orderCount: 24,
+                    products: [
+                        { id: 'prd_01', name: 'Nvidia A100 Tensor Core', desc: 'AI architecture rendering silicon. Factory sealed.', price: 9500.00, icon: 'fa-microchip', stock: 12 },
+                        { id: 'prd_02', name: 'Server Rack Module v3', desc: 'Enterprise data retention node. 144TB Solid State.', price: 2400.00, icon: 'fa-server', stock: 45 },
+                        { id: 'prd_03', name: 'Cipher Biometric Key', desc: 'FIDO2 Level 3 Hardware authorization device.', price: 145.00, icon: 'fa-fingerprint', stock: 180 }
+                    ],
+                    recentOrders: [
+                        { id: 'ORD_29A', item: 'Server Rack Module v3', user: 'anon_71@sector.io', val: 2400.00, time: 'System Pre-Load' }
+                    ]
+                }));
             }
         }
+        initStoreDB();
     </script>
 </head>
-<body class="bg-app-base text-zinc-300 font-sans min-h-screen flex flex-col selection:bg-app-primary selection:text-white antialiased overflow-x-hidden">
+<body class="bg-app-base text-zinc-300 font-sans min-h-screen flex flex-col selection:bg-blue-600/30 overflow-x-hidden antialiased">
     
-    <!-- Navbar / Glassmorphism -->
-    <nav class="fixed top-0 w-full backdrop-blur-md bg-app-base/70 border-b border-app-border z-50 transition-all">
+    <!-- Navbar / Store Navigation -->
+    <nav class="fixed top-0 w-full backdrop-blur-md bg-app-base/70 border-b border-app-border z-50">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <div class="w-6 h-6 bg-gradient-to-tr from-blue-600 to-indigo-400 rounded-md rotate-3 shadow-[0_0_15px_rgba(59,130,246,0.3)]"></div>
-                <span class="text-white font-semibold text-lg tracking-tight">Nexus</span>
+                <div class="w-6 h-6 bg-gradient-to-tr from-white to-zinc-400 rounded-md rotate-3 flex items-center justify-center shadow-lg"><i class="fa-solid fa-bolt text-[10px] text-black"></i></div>
+                <span class="text-white font-bold tracking-tight">NEXUS Store</span>
             </div>
-            
-            <div class="hidden md:flex items-center space-x-8 text-sm font-medium">
-                <a href="#" class="text-zinc-400 hover:text-white transition-colors duration-200">Solutions</a>
-                <a href="#" class="text-zinc-400 hover:text-white transition-colors duration-200">About</a>
-                <a href="#" class="text-zinc-400 hover:text-white transition-colors duration-200">Contact</a>
-            </div>
-
-            <div>
-                <a href="login.html" class="inline-flex items-center justify-center px-4 py-1.5 rounded-md text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-app-border backdrop-blur-sm transition-all duration-300">
-                    Login <i class="fa-solid fa-arrow-right ml-2 text-xs opacity-70"></i>
+            <div class="flex items-center space-x-6 text-sm font-medium">
+                <button onclick="toggleCart()" class="text-zinc-400 hover:text-white transition relative font-mono">
+                    <i class="fa-solid fa-cart-shopping mr-2 text-white"></i> CART 
+                    <span id="cartCounter" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded-full absolute -top-2 -right-3 hidden">0</span>
+                </button>
+                <a href="login.html" class="inline-flex items-center px-4 py-1.5 rounded bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black transition">
+                    Admin Protocol
                 </a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Hero -->
-    <main class="flex-grow flex flex-col items-center justify-center pt-32 pb-20 relative">
-        <!-- Abstract gradient mesh behind hero -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+    <!-- Shopping Cart Sidebar Drawer (Hidden by default) -->
+    <div id="cartDrawer" class="fixed right-0 top-0 bottom-0 w-[400px] bg-app-card border-l border-app-border z-[60] translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+         <div class="h-16 flex items-center justify-between px-6 border-b border-app-border shrink-0 bg-black/50">
+             <span class="text-white font-bold tracking-tight">Shopping Cart</span>
+             <button onclick="toggleCart()" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+         </div>
+         <div id="cartList" class="flex-1 overflow-y-auto p-6 space-y-4 font-mono text-sm">
+             <div class="text-zinc-600 h-full flex items-center justify-center flex-col opacity-50">
+                <i class="fa-solid fa-box-open text-2xl mb-2"></i> Cart sequence is empty.
+             </div>
+         </div>
+         <div class="p-6 border-t border-app-border bg-[#050505]">
+             <div class="flex justify-between items-end mb-4 text-white font-mono">
+                  <span class="text-xs text-zinc-400 uppercase tracking-widest">Gross Total</span>
+                  <span id="cartTotal" class="text-2xl font-bold tracking-tight">$0.00</span>
+             </div>
+             <button id="checkoutBtn" onclick="processCheckout()" class="w-full bg-blue-600 text-white font-semibold font-mono py-3 rounded border border-blue-500 hover:bg-blue-500 hover:scale-[1.02] transition shadow-[0_0_15px_rgba(59,130,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed" disabled>SECURE CHECKOUT</button>
+         </div>
+    </div>
 
-        <div class="max-w-4xl w-full px-6 flex flex-col items-center text-center relative z-10">
-            <!-- Pulse Status indicator -->
-            <div class="mb-8 flex items-center px-3 py-1 rounded-full border border-app-border bg-app-base text-xs font-mono font-medium">
-                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse mr-2 shadow-[0_0_8px_rgba(59,130,246,1)]"></span>
-                <span class="text-zinc-400">System Core v3.0 <span class="text-blue-400 mx-1">•</span> All services online</span>
-            </div>
+    <!-- Store Hero -->
+    <main class="flex-grow pt-32 pb-24 relative max-w-7xl mx-auto w-full px-6 flex flex-col z-10">
+        <!-- Decoration -->
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-900/10 blur-[150px] pointer-events-none rounded-full"></div>
 
-            <!-- Heavy Headline Gradient -->
-            <h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-white leading-tight mb-6 text-balance">
-                Scale your enterprise with <br class="hidden md:block"/> 
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-indigo-500 pb-2">
-                    intelligent telemetry
-                </span>
+        <div class="text-left mb-16 max-w-3xl border-b border-app-border pb-12">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tighter text-white leading-tight mb-4 text-balance">
+                High-fidelity hardware for <br class="hidden md:block"/> 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">Enterprise deployment.</span>
             </h1>
-
-            <p class="text-zinc-400 text-lg md:text-xl max-w-2xl font-light mb-10 text-balance leading-relaxed">
-                Connect the operational backbone of your e-commerce financial engine. Access unified multi-stream revenue tracking, absolute tax compliance, and automated AI assistance. 
-            </p>
-
-            <div class="flex items-center space-x-4">
-                <a href="login.html" class="px-6 py-3 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-all duration-200 shadow-[0_0_20px_rgba(37,99,235,0.4)] shadow-blue-500/20">
-                    Get Started Free
-                </a>
-                <button class="px-6 py-3 rounded-lg text-sm font-medium text-white bg-transparent border border-app-border hover:bg-white/5 transition-all duration-200">
-                    <i class="fa-regular fa-circle-play mr-2"></i> View Platform
-                </button>
-            </div>
+            <p class="text-zinc-500 text-lg md:text-xl font-light text-balance leading-relaxed mb-6 font-mono tracking-tight">Consumer node mapping access granted. Select and secure architectural assets. Instant telemetry linking authorized.</p>
         </div>
         
-        <!-- UI Dashboard Preview graphic -->
-        <div class="w-full max-w-6xl mt-24 px-6 opacity-40 hover:opacity-100 transition-opacity duration-1000 select-none">
-            <div class="relative w-full h-[400px] border border-app-border bg-[#101014] rounded-t-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
-                 <div class="flex h-10 border-b border-app-border bg-black/40 items-center px-4 space-x-2">
-                    <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
-                 </div>
-                 <!-- Faux Graph UI -->
-                 <div class="p-8 space-y-6">
-                    <div class="flex space-x-4">
-                        <div class="h-20 w-64 border border-app-border bg-app-card rounded-xl"></div>
-                        <div class="h-20 w-64 border border-app-border bg-app-card rounded-xl"></div>
-                        <div class="h-20 w-64 border border-app-border bg-app-card rounded-xl"></div>
-                    </div>
-                 </div>
-                 <!-- Faded bottom gradient overlay to blend into the darkness -->
-                 <div class="absolute bottom-0 w-full h-40 bg-gradient-to-t from-app-base to-transparent"></div>
-            </div>
+        <!-- Live Ecom Store Product Grid Output Engine -->
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-lg font-bold text-white tracking-tight flex items-center"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-3 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>Live Inventory feed</h2>
         </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="productGridEngine">
+            <!-- Dynamic products populate here natively -->
+        </div>
+
     </main>
 
-    <!-- Minimal Footer -->
-    <footer class="w-full border-t border-app-border bg-black">
-        <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-500 font-mono">
-            <div>&copy; 2026 Nexus Systems Ltd. Secure framework intact.</div>
-            <div class="flex space-x-6 mt-4 md:mt-0 text-zinc-400">
-                <a href="#" class="hover:text-white transition-colors duration-200 text-lg"><i class="fa-brands fa-x-twitter"></i></a>
-                <a href="#" class="hover:text-white transition-colors duration-200 text-lg"><i class="fa-brands fa-linkedin-in"></i></a>
-                <a href="#" class="hover:text-white transition-colors duration-200 text-lg"><i class="fa-brands fa-github"></i></a>
-            </div>
+    <footer class="w-full border-t border-app-border bg-[#020202] mt-auto">
+        <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col items-center justify-center text-xs text-zinc-600 font-mono tracking-widest text-center">
+            &copy; 2026 Nexus E-Commerce Engine. Simulated API transaction test environment.
         </div>
     </footer>
 
+    <!-- Store JS Logic framework (Cart, Render, Checkout State updates the main Admin dashboard!) -->
+    <script>
+        let shoppingCartSequence = [];
+        const fmtDollar = new Intl.NumberFormat('en-US', {style: 'currency', currency:'USD'});
+
+        function toggleCart() {
+             const dr = document.getElementById('cartDrawer');
+             dr.classList.toggle('translate-x-full');
+        }
+
+        // Render storefront catalog by hooking DB state
+        function renderStorefront() {
+             const sysDataMapStruct = JSON.parse(localStorage.getItem('NEXUS_ECOM_DB'));
+             const nodeStoreGird = document.getElementById('productGridEngine');
+
+             nodeStoreGird.innerHTML = sysDataMapStruct.products.map(prd => `
+                  <div class="border border-app-border bg-[#09090b]/80 backdrop-blur-md rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 group shadow-lg flex flex-col">
+                       <div class="h-40 border-b border-app-border bg-black/50 flex justify-center items-center relative overflow-hidden group-hover:bg-[#121217] transition">
+                            <i class="fa-solid ${prd.icon} text-6xl text-white/10 group-hover:text-blue-500/20 group-hover:scale-110 transition duration-700"></i>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                       </div>
+                       <div class="p-6 flex-1 flex flex-col justify-between space-y-4 relative z-10 bg-app-card">
+                            <div>
+                                <h3 class="text-white font-bold text-lg mb-1 group-hover:text-blue-400 transition tracking-tight">${prd.name}</h3>
+                                <p class="text-zinc-500 text-[11px] leading-relaxed font-mono">${prd.desc}</p>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-app-border pt-4">
+                                <span class="font-mono text-xl text-white font-medium">${fmtDollar.format(prd.price)}</span>
+                                <button onclick="addToLocalCart('${prd.id}', '${prd.name}', ${prd.price})" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold uppercase tracking-wider hover:bg-white hover:text-black hover:border-white transition group">
+                                    ADD <i class="fa-solid fa-plus text-[10px] ml-1"></i>
+                                </button>
+                            </div>
+                       </div>
+                  </div>
+             `).join('');
+        }
+
+        function addToLocalCart(prId, prName, prPrice) {
+            shoppingCartSequence.push({ id: prId, name: prName, price: parseFloat(prPrice) });
+            refreshCartDrawerUI();
+            toggleCart(); // snap open to view mapping UI interaction object 
+        }
+
+        function refreshCartDrawerUI() {
+             const targetDomOutputMapStrNodeUIArray = document.getElementById('cartList');
+             const targetNumPriceFloatMathUIArray= document.getElementById('cartTotal');
+             const counterLogicCountMappingBox = document.getElementById('cartCounter');
+             const checkoutTriggerLockHTMLBoolean = document.getElementById('checkoutBtn');
+
+             if(shoppingCartSequence.length === 0) {
+                 targetDomOutputMapStrNodeUIArray.innerHTML = `<div class="text-zinc-600 h-full flex items-center justify-center flex-col opacity-50"><i class="fa-solid fa-box-open text-2xl mb-2"></i> Cart sequence is empty.</div>`;
+                 targetNumPriceFloatMathUIArray.innerText = '$0.00';
+                 counterLogicCountMappingBox.classList.add('hidden');
+                 checkoutTriggerLockHTMLBoolean.disabled = true;
+                 return;
+             }
+             
+             counterLogicCountMappingBox.classList.remove('hidden');
+             counterLogicCountMappingBox.innerText = shoppingCartSequence.length;
+             checkoutTriggerLockHTMLBoolean.disabled = false;
+
+             let subLogicFloatCalcCSSHTMLUIObject = 0;
+             targetDomOutputMapStrNodeUIArray.innerHTML = shoppingCartSequence.map((it, dx) => {
+                  subLogicFloatCalcCSSHTMLUIObject += it.price;
+                  return `
+                  <div class="p-3 bg-black border border-white/10 rounded flex justify-between items-center group relative overflow-hidden">
+                       <div class="absolute left-0 w-1 h-full bg-blue-500/50 hidden group-hover:block transition"></div>
+                       <div>
+                            <p class="text-zinc-300 font-semibold text-xs leading-none mb-1 group-hover:pl-2 transition-all">${it.name}</p>
+                            <p class="text-blue-400 font-bold group-hover:pl-2 transition-all">${fmtDollar.format(it.price)}</p>
+                       </div>
+                       <button onclick="shoppingCartSequence.splice(${dx}, 1); refreshCartDrawerUI();" class="text-red-500 hover:text-white px-2 py-1 bg-red-500/10 rounded transition text-[10px] border border-red-500/20"><i class="fa-solid fa-trash"></i></button>
+                  </div>`;
+             }).join('');
+
+             targetNumPriceFloatMathUIArray.innerText = fmtDollar.format(subLogicFloatCalcCSSHTMLUIObject);
+             return subLogicFloatCalcCSSHTMLUIObject; // Pass pipeline float upstream var DOM API logic
+        }
+
+        function processCheckout() {
+            const systemBtnValLogicStateMarkupCSSLockHTML = document.getElementById('checkoutBtn');
+            systemBtnValLogicStateMarkupCSSLockHTML.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ENCRYPTING PAYMENT...';
+            systemBtnValLogicStateMarkupCSSLockHTML.classList.add('opacity-50');
+
+            setTimeout(() => {
+                // Fetch the Master DB. WE ADD MONEY HERE SO THE ADMIN PANEL SEES IT. This completes the logic flow request from User mapping platform requirements
+                let theMasterLiveDBLogicLoopDOMNodeReferenceAPIStringMappingObject = JSON.parse(localStorage.getItem('NEXUS_ECOM_DB'));
+                let totalRunCSSStrCSSAPI = refreshCartDrawerUI();
+
+                theMasterLiveDBLogicLoopDOMNodeReferenceAPIStringMappingObject.revenue += totalRunCSSStrCSSAPI;
+                theMasterLiveDBLogicLoopDOMNodeReferenceAPIStringMappingObject.orderCount += shoppingCartSequence.length;
+
+                // Push new orders to Admin Feed array component architecture structure string loop string logic mapping 
+                shoppingCartSequence.forEach(orderItemLoopStrArrayNodeReferenceVarObject => {
+                     let stampRandomizedStringUserComponentCSSMapIDVarUI = "EXT_" + Math.floor(Math.random() * 9000 + 1000);
+                     theMasterLiveDBLogicLoopDOMNodeReferenceAPIStringMappingObject.recentOrders.unshift({
+                          id: 'ORD_'+ Math.random().toString(16).slice(2,7).toUpperCase(),
+                          item: orderItemLoopStrArrayNodeReferenceVarObject.name,
+                          user: stampRandomizedStringUserComponentCSSMapIDVarUI + '@secure.mail',
+                          val: orderItemLoopStrArrayNodeReferenceVarObject.price,
+                          time: 'Just Now'
+                     });
+                });
+                
+                // Securely Save and sync Admin array string layout component
+                localStorage.setItem('NEXUS_ECOM_DB', JSON.stringify(theMasterLiveDBLogicLoopDOMNodeReferenceAPIStringMappingObject));
+
+                shoppingCartSequence = []; // wipe front-end state structural mapping object wrapper map framework array DOM CSS object API component layout structure loop framework syntax string HTML variables list structure CSS HTML setup layout string box flex markup map string architecture array markup logic map list
+                systemBtnValLogicStateMarkupCSSLockHTML.innerHTML = '<i class="fa-solid fa-check mr-2"></i> TRANSACTION CONFIRMED';
+                systemBtnValLogicStateMarkupCSSLockHTML.classList.replace('bg-blue-600', 'bg-green-600');
+                systemBtnValLogicStateMarkupCSSLockHTML.classList.replace('border-blue-500', 'border-green-500');
+
+                setTimeout(() => { toggleCart(); refreshCartDrawerUI(); systemBtnValLogicStateMarkupCSSLockHTML.innerHTML='SECURE CHECKOUT'; systemBtnValLogicStateMarkupCSSLockHTML.classList.replace('bg-green-600', 'bg-blue-600'); systemBtnValLogicStateMarkupCSSLockHTML.classList.replace('border-green-500', 'border-blue-500'); systemBtnValLogicStateMarkupCSSLockHTML.classList.remove('opacity-50'); }, 2000);
+            }, 1200);
+        }
+
+        renderStorefront(); // boot loop list DOM String layout wrapper variables flex array setup structure object architecture HTML CSS string mapping logic HTML setup mapping markup css map styling string logic API component map architecture list markup layout logic map css mapping HTML object logic UI syntax variables 
+    </script>
 </body>
 </html>
